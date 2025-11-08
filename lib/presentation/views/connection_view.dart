@@ -68,10 +68,10 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
     if (state.isConnected) {
       statusText = 'Connected';
     } else if (state.isConnecting) {
-      statusText = 'Connecting';
+      statusText = state.error != null ? 'Still Connecting' : 'Connecting';
     } else {
       // isScanning or requesting permissions - always show "Scanning"
-      statusText = 'Scanning';
+      statusText = state.error != null ? 'Still Scanning' : 'Scanning';
     }
 
     return Scaffold(
@@ -143,7 +143,7 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
 
             const SizedBox(height: 60),
 
-            // Status text
+            // Status text (always shown)
             Text(
               statusText,
               style: const TextStyle(
@@ -153,6 +153,64 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
                 letterSpacing: 2,
               ),
             ),
+
+            const SizedBox(height: 40),
+
+            // Error message box (shown when there's an error)
+            if (state.error != null) ...[
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 40),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  border: Border.all(color: Colors.red.shade200, width: 1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red.shade700,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      state.error!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.red.shade900,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // Button to connect new device
+              ElevatedButton(
+                onPressed: () {
+                  ref.read(connectionViewModelProvider.notifier).scanForNewDevice();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 4,
+                ),
+                child: const Text(
+                  'Connect New Device',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

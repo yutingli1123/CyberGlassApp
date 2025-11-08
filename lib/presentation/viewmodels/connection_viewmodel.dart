@@ -38,7 +38,80 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
     // Permissions will be requested automatically when scanning starts on both platforms
     await _waitForBluetoothReady();
 
-    // Start scanning
+    // Check if there's a saved device
+    final savedDevice = await _storageService.getSavedDevice();
+
+    if (savedDevice != null) {
+      // Try to reconnect to saved device
+      await _tryReconnectSavedDevice(savedDevice);
+    } else {
+      // No saved device, start scanning for new devices
+      await startScanningAndAutoConnect();
+    }
+  }
+
+  /// Try to reconnect to previously saved device
+  Future<void> _tryReconnectSavedDevice(GlassDevice savedDevice) async {
+    print('[ConnectionViewModel] Found saved device: ${savedDevice.name} (${savedDevice.macAddress})');
+    print('[ConnectionViewModel] Starting scan to find saved device...');
+
+    state = state.copyWith(
+      isScanning: true,
+      statusMessage: 'Looking for ${savedDevice.name}...',
+    );
+
+    try {
+      // Start scanning
+      _scanSubscription?.cancel();
+      _scanSubscription = _bluetoothService.scanForDevices().listen(
+        (devices) {
+          print('[ConnectionViewModel] Found ${devices.length} CyberGlass devices');
+
+          // Look for the saved device
+          final targetDevice = devices.firstWhere(
+            (result) => result.device.remoteId.str == savedDevice.macAddress,
+            orElse: () => throw Exception('Saved device not found in scan results'),
+          );
+
+          print('[ConnectionViewModel] Found saved device, connecting...');
+          _autoConnectToDevice(targetDevice.device);
+        },
+        onError: (error) {
+          print('[ConnectionViewModel] Scan error: $error');
+          _retrySavedDeviceScan();
+        },
+      );
+
+      // Set a timeout for finding the saved device
+      await Future.delayed(const Duration(seconds: 10));
+
+      // If still scanning after 10 seconds, device not found - show error but keep scanning
+      if (state.isScanning && !state.isConnecting && !state.isConnected) {
+        state = state.copyWith(
+          error: 'Cannot find ${savedDevice.name}. The device may be turned off or out of range.',
+        );
+        print('[ConnectionViewModel] Saved device not found after timeout, but continuing to scan...');
+        // Keep scanning, don't stop
+      }
+    } catch (e) {
+      print('[ConnectionViewModel] Reconnection failed: $e');
+      state = state.copyWith(
+        error: 'Failed to reconnect to ${savedDevice.name}',
+      );
+      // Don't stop scanning, retry
+      _retrySavedDeviceScan();
+    }
+  }
+
+  /// Clear error and start scanning for new devices
+  Future<void> scanForNewDevice() async {
+    print('[ConnectionViewModel] User requested to scan for new device');
+
+    // Clear saved device
+    await _storageService.clearDevice();
+
+    // Clear error and start scanning
+    state = state.copyWith(error: null);
     await startScanningAndAutoConnect();
   }
 
@@ -106,8 +179,8 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
         },
         onError: (error) {
           print('[ConnectionViewModel] Scan error: $error');
-          // Don't stop scanning, retry after delay
-          _retryScanning();
+          // Retry after delay
+          _retryNewDeviceScan();
         },
         onDone: () {
           print('[ConnectionViewModel] Scan completed');
@@ -117,13 +190,28 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
     } catch (e) {
       print('[ConnectionViewModel] Failed to start scan: $e');
       // Retry after delay
-      _retryScanning();
+      _retryNewDeviceScan();
     }
   }
 
-  /// Retry scanning after a delay
-  Future<void> _retryScanning() async {
-    print('[ConnectionViewModel] Retrying scan in 2 seconds...');
+  /// Retry scanning for saved device after a delay
+  Future<void> _retrySavedDeviceScan() async {
+    print('[ConnectionViewModel] Retrying saved device scan in 2 seconds...');
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Only retry if not already connecting or connected
+    if (!state.isConnecting && !state.isConnected && state.error != null) {
+      // Get saved device and try scanning again
+      final savedDevice = await _storageService.getSavedDevice();
+      if (savedDevice != null) {
+        await _tryReconnectSavedDevice(savedDevice);
+      }
+    }
+  }
+
+  /// Retry scanning for new device after a delay
+  Future<void> _retryNewDeviceScan() async {
+    print('[ConnectionViewModel] Retrying new device scan in 2 seconds...');
     await Future.delayed(const Duration(seconds: 2));
 
     // Only retry if not already connecting or connected
