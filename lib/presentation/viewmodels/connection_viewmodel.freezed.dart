@@ -1,0 +1,311 @@
+// coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'connection_viewmodel.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+T _$identity<T>(T value) => value;
+
+final _privateConstructorUsedError = UnsupportedError(
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
+
+/// @nodoc
+mixin _$ConnectionViewState {
+  List<ScanResult> get scannedDevices => throw _privateConstructorUsedError;
+  bool get isScanning => throw _privateConstructorUsedError;
+  bool get isConnecting => throw _privateConstructorUsedError;
+  bool get isConnected => throw _privateConstructorUsedError;
+  bool get isRequestingPermission => throw _privateConstructorUsedError;
+  String? get error => throw _privateConstructorUsedError;
+  String? get statusMessage => throw _privateConstructorUsedError;
+
+  /// Create a copy of ConnectionViewState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $ConnectionViewStateCopyWith<ConnectionViewState> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ConnectionViewStateCopyWith<$Res> {
+  factory $ConnectionViewStateCopyWith(
+    ConnectionViewState value,
+    $Res Function(ConnectionViewState) then,
+  ) = _$ConnectionViewStateCopyWithImpl<$Res, ConnectionViewState>;
+  @useResult
+  $Res call({
+    List<ScanResult> scannedDevices,
+    bool isScanning,
+    bool isConnecting,
+    bool isConnected,
+    bool isRequestingPermission,
+    String? error,
+    String? statusMessage,
+  });
+}
+
+/// @nodoc
+class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
+    implements $ConnectionViewStateCopyWith<$Res> {
+  _$ConnectionViewStateCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of ConnectionViewState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? scannedDevices = null,
+    Object? isScanning = null,
+    Object? isConnecting = null,
+    Object? isConnected = null,
+    Object? isRequestingPermission = null,
+    Object? error = freezed,
+    Object? statusMessage = freezed,
+  }) {
+    return _then(
+      _value.copyWith(
+            scannedDevices: null == scannedDevices
+                ? _value.scannedDevices
+                : scannedDevices // ignore: cast_nullable_to_non_nullable
+                      as List<ScanResult>,
+            isScanning: null == isScanning
+                ? _value.isScanning
+                : isScanning // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isConnecting: null == isConnecting
+                ? _value.isConnecting
+                : isConnecting // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isConnected: null == isConnected
+                ? _value.isConnected
+                : isConnected // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isRequestingPermission: null == isRequestingPermission
+                ? _value.isRequestingPermission
+                : isRequestingPermission // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            error: freezed == error
+                ? _value.error
+                : error // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            statusMessage: freezed == statusMessage
+                ? _value.statusMessage
+                : statusMessage // ignore: cast_nullable_to_non_nullable
+                      as String?,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$ConnectionViewStateImplCopyWith<$Res>
+    implements $ConnectionViewStateCopyWith<$Res> {
+  factory _$$ConnectionViewStateImplCopyWith(
+    _$ConnectionViewStateImpl value,
+    $Res Function(_$ConnectionViewStateImpl) then,
+  ) = __$$ConnectionViewStateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    List<ScanResult> scannedDevices,
+    bool isScanning,
+    bool isConnecting,
+    bool isConnected,
+    bool isRequestingPermission,
+    String? error,
+    String? statusMessage,
+  });
+}
+
+/// @nodoc
+class __$$ConnectionViewStateImplCopyWithImpl<$Res>
+    extends _$ConnectionViewStateCopyWithImpl<$Res, _$ConnectionViewStateImpl>
+    implements _$$ConnectionViewStateImplCopyWith<$Res> {
+  __$$ConnectionViewStateImplCopyWithImpl(
+    _$ConnectionViewStateImpl _value,
+    $Res Function(_$ConnectionViewStateImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of ConnectionViewState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? scannedDevices = null,
+    Object? isScanning = null,
+    Object? isConnecting = null,
+    Object? isConnected = null,
+    Object? isRequestingPermission = null,
+    Object? error = freezed,
+    Object? statusMessage = freezed,
+  }) {
+    return _then(
+      _$ConnectionViewStateImpl(
+        scannedDevices: null == scannedDevices
+            ? _value._scannedDevices
+            : scannedDevices // ignore: cast_nullable_to_non_nullable
+                  as List<ScanResult>,
+        isScanning: null == isScanning
+            ? _value.isScanning
+            : isScanning // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isConnecting: null == isConnecting
+            ? _value.isConnecting
+            : isConnecting // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isConnected: null == isConnected
+            ? _value.isConnected
+            : isConnected // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isRequestingPermission: null == isRequestingPermission
+            ? _value.isRequestingPermission
+            : isRequestingPermission // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        error: freezed == error
+            ? _value.error
+            : error // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        statusMessage: freezed == statusMessage
+            ? _value.statusMessage
+            : statusMessage // ignore: cast_nullable_to_non_nullable
+                  as String?,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$ConnectionViewStateImpl implements _ConnectionViewState {
+  const _$ConnectionViewStateImpl({
+    final List<ScanResult> scannedDevices = const [],
+    this.isScanning = false,
+    this.isConnecting = false,
+    this.isConnected = false,
+    this.isRequestingPermission = false,
+    this.error,
+    this.statusMessage,
+  }) : _scannedDevices = scannedDevices;
+
+  final List<ScanResult> _scannedDevices;
+  @override
+  @JsonKey()
+  List<ScanResult> get scannedDevices {
+    if (_scannedDevices is EqualUnmodifiableListView) return _scannedDevices;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_scannedDevices);
+  }
+
+  @override
+  @JsonKey()
+  final bool isScanning;
+  @override
+  @JsonKey()
+  final bool isConnecting;
+  @override
+  @JsonKey()
+  final bool isConnected;
+  @override
+  @JsonKey()
+  final bool isRequestingPermission;
+  @override
+  final String? error;
+  @override
+  final String? statusMessage;
+
+  @override
+  String toString() {
+    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, error: $error, statusMessage: $statusMessage)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ConnectionViewStateImpl &&
+            const DeepCollectionEquality().equals(
+              other._scannedDevices,
+              _scannedDevices,
+            ) &&
+            (identical(other.isScanning, isScanning) ||
+                other.isScanning == isScanning) &&
+            (identical(other.isConnecting, isConnecting) ||
+                other.isConnecting == isConnecting) &&
+            (identical(other.isConnected, isConnected) ||
+                other.isConnected == isConnected) &&
+            (identical(other.isRequestingPermission, isRequestingPermission) ||
+                other.isRequestingPermission == isRequestingPermission) &&
+            (identical(other.error, error) || other.error == error) &&
+            (identical(other.statusMessage, statusMessage) ||
+                other.statusMessage == statusMessage));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    const DeepCollectionEquality().hash(_scannedDevices),
+    isScanning,
+    isConnecting,
+    isConnected,
+    isRequestingPermission,
+    error,
+    statusMessage,
+  );
+
+  /// Create a copy of ConnectionViewState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ConnectionViewStateImplCopyWith<_$ConnectionViewStateImpl> get copyWith =>
+      __$$ConnectionViewStateImplCopyWithImpl<_$ConnectionViewStateImpl>(
+        this,
+        _$identity,
+      );
+}
+
+abstract class _ConnectionViewState implements ConnectionViewState {
+  const factory _ConnectionViewState({
+    final List<ScanResult> scannedDevices,
+    final bool isScanning,
+    final bool isConnecting,
+    final bool isConnected,
+    final bool isRequestingPermission,
+    final String? error,
+    final String? statusMessage,
+  }) = _$ConnectionViewStateImpl;
+
+  @override
+  List<ScanResult> get scannedDevices;
+  @override
+  bool get isScanning;
+  @override
+  bool get isConnecting;
+  @override
+  bool get isConnected;
+  @override
+  bool get isRequestingPermission;
+  @override
+  String? get error;
+  @override
+  String? get statusMessage;
+
+  /// Create a copy of ConnectionViewState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$ConnectionViewStateImplCopyWith<_$ConnectionViewStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
