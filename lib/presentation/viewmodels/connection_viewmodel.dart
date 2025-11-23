@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../data/models/glass_device.dart';
 import '../../domain/services/bluetooth_service.dart';
 import '../../domain/services/storage_service.dart';
+import '../../domain/services/gemini_live_service.dart';
 import '../providers/services_provider.dart';
 
 part 'connection_viewmodel.freezed.dart';
@@ -18,6 +20,11 @@ class ConnectionViewState with _$ConnectionViewState {
     @Default(false) bool isConnecting,
     @Default(false) bool isConnected,
     @Default(false) bool isRequestingPermission,
+    // Gemini Live API state
+    @Default(false) bool isGeminiConnecting,
+    @Default(false) bool isGeminiConnected,
+    @Default(false) bool isGeminiStreaming,
+    String? geminiStatus,
     String? error,
     String? statusMessage,
   }) = _ConnectionViewState;
@@ -25,12 +32,95 @@ class ConnectionViewState with _$ConnectionViewState {
 
 /// ConnectionViewModel manages device scanning and auto-connection
 class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
-  ConnectionViewModel(this._bluetoothService, this._storageService)
-      : super(const ConnectionViewState());
+  ConnectionViewModel(
+    this._bluetoothService,
+    this._storageService,
+    this._geminiLiveService,
+  ) : super(const ConnectionViewState()) {
+    // Set up Gemini callbacks
+    _setupGeminiCallbacks();
+  }
 
   final BleService _bluetoothService;
   final StorageService _storageService;
+  final GeminiLiveService _geminiLiveService;
   StreamSubscription? _scanSubscription;
+
+  /// Set up Gemini Live Service callbacks
+  void _setupGeminiCallbacks() {
+    _geminiLiveService.onStatusChanged = (status) {
+      print('[GeminiLive] $status');
+      state = state.copyWith(geminiStatus: status);
+    };
+
+    _geminiLiveService.onTextReceived = (text) {
+      print('[GeminiLive] Text: $text');
+    };
+
+    _geminiLiveService.onInterrupted = () {
+      print('[GeminiLive] User interrupted');
+    };
+
+    _geminiLiveService.onTurnComplete = () {
+      print('[GeminiLive] Turn complete');
+    };
+  }
+
+  /// Start Gemini Live session after BLE connection
+  Future<void> _startGeminiSession() async {
+    print('[ConnectionViewModel] Starting Gemini Live session...');
+    state = state.copyWith(
+      isGeminiConnecting: true,
+      geminiStatus: 'Connecting to Gemini...',
+    );
+
+    try {
+      // Connect to Gemini Live API
+      final connected = await _geminiLiveService.connect();
+
+      if (connected) {
+        // Start audio streaming
+        await _geminiLiveService.startAudioStream();
+
+        state = state.copyWith(
+          isGeminiConnecting: false,
+          isGeminiConnected: true,
+          isGeminiStreaming: true,
+          geminiStatus: 'Gemini Live ready - start speaking!',
+        );
+        print('[ConnectionViewModel] Gemini Live session started successfully');
+      } else {
+        throw Exception('Failed to connect to Gemini Live API');
+      }
+    } catch (e) {
+      print('[ConnectionViewModel] Gemini session failed: $e');
+      state = state.copyWith(
+        isGeminiConnecting: false,
+        isGeminiConnected: false,
+        isGeminiStreaming: false,
+        geminiStatus: 'Gemini error: $e',
+      );
+    }
+  }
+
+  /// Stop Gemini Live session
+  Future<void> stopGeminiSession() async {
+    print('[ConnectionViewModel] Stopping Gemini Live session...');
+    await _geminiLiveService.disconnect();
+    state = state.copyWith(
+      isGeminiConnected: false,
+      isGeminiStreaming: false,
+      geminiStatus: 'Gemini disconnected',
+    );
+  }
+
+  /// Send image to Gemini
+  Future<void> sendImageToGemini(List<int> imageBytes) async {
+    await _geminiLiveService.sendImage(Uint8List.fromList(imageBytes));
+  }
+
+  /// Get the Gemini Live Service instance
+  GeminiLiveService get geminiService => _geminiLiveService;
 
   /// Initialize: wait for Bluetooth and start scanning
   Future<void> initialize() async {
@@ -68,13 +158,16 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
           print('[ConnectionViewModel] Found ${devices.length} CyberGlass devices');
 
           // Look for the saved device
-          final targetDevice = devices.firstWhere(
+          final targetDeviceIndex = devices.indexWhere(
             (result) => result.device.remoteId.str == savedDevice.macAddress,
-            orElse: () => throw Exception('Saved device not found in scan results'),
           );
 
-          print('[ConnectionViewModel] Found saved device, connecting...');
-          _autoConnectToDevice(targetDevice.device);
+          // If found, connect to it
+          if (targetDeviceIndex != -1) {
+            print('[ConnectionViewModel] Found saved device, connecting...');
+            _autoConnectToDevice(devices[targetDeviceIndex].device);
+          }
+          // Otherwise, keep scanning (don't throw, just wait for next scan result)
         },
         onError: (error) {
           print('[ConnectionViewModel] Scan error: $error');
@@ -249,6 +342,9 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 
       print('[ConnectionViewModel] Connection successful!');
       state = state.copyWith(isConnecting: false, isConnected: true);
+
+      // Automatically start Gemini Live session after BLE connection
+      await _startGeminiSession();
     } catch (e) {
       print('[ConnectionViewModel] Connection failed: $e');
       state = state.copyWith(
@@ -291,6 +387,7 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
   @override
   void dispose() {
     _scanSubscription?.cancel();
+    _geminiLiveService.dispose();
     super.dispose();
   }
 }
@@ -300,5 +397,6 @@ final connectionViewModelProvider =
     StateNotifierProvider<ConnectionViewModel, ConnectionViewState>((ref) {
   final bluetoothService = ref.watch(bluetoothServiceProvider);
   final storageService = ref.watch(storageServiceProvider);
-  return ConnectionViewModel(bluetoothService, storageService);
+  final geminiService = ref.watch(geminiLiveServiceProvider);
+  return ConnectionViewModel(bluetoothService, storageService, geminiService);
 });

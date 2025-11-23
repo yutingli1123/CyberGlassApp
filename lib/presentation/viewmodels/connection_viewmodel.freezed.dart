@@ -21,7 +21,12 @@ mixin _$ConnectionViewState {
   bool get isScanning => throw _privateConstructorUsedError;
   bool get isConnecting => throw _privateConstructorUsedError;
   bool get isConnected => throw _privateConstructorUsedError;
-  bool get isRequestingPermission => throw _privateConstructorUsedError;
+  bool get isRequestingPermission =>
+      throw _privateConstructorUsedError; // Gemini Live API state
+  bool get isGeminiConnecting => throw _privateConstructorUsedError;
+  bool get isGeminiConnected => throw _privateConstructorUsedError;
+  bool get isGeminiStreaming => throw _privateConstructorUsedError;
+  String? get geminiStatus => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
   String? get statusMessage => throw _privateConstructorUsedError;
 
@@ -45,6 +50,10 @@ abstract class $ConnectionViewStateCopyWith<$Res> {
     bool isConnecting,
     bool isConnected,
     bool isRequestingPermission,
+    bool isGeminiConnecting,
+    bool isGeminiConnected,
+    bool isGeminiStreaming,
+    String? geminiStatus,
     String? error,
     String? statusMessage,
   });
@@ -70,6 +79,10 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
     Object? isConnecting = null,
     Object? isConnected = null,
     Object? isRequestingPermission = null,
+    Object? isGeminiConnecting = null,
+    Object? isGeminiConnected = null,
+    Object? isGeminiStreaming = null,
+    Object? geminiStatus = freezed,
     Object? error = freezed,
     Object? statusMessage = freezed,
   }) {
@@ -95,6 +108,22 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
                 ? _value.isRequestingPermission
                 : isRequestingPermission // ignore: cast_nullable_to_non_nullable
                       as bool,
+            isGeminiConnecting: null == isGeminiConnecting
+                ? _value.isGeminiConnecting
+                : isGeminiConnecting // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isGeminiConnected: null == isGeminiConnected
+                ? _value.isGeminiConnected
+                : isGeminiConnected // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isGeminiStreaming: null == isGeminiStreaming
+                ? _value.isGeminiStreaming
+                : isGeminiStreaming // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            geminiStatus: freezed == geminiStatus
+                ? _value.geminiStatus
+                : geminiStatus // ignore: cast_nullable_to_non_nullable
+                      as String?,
             error: freezed == error
                 ? _value.error
                 : error // ignore: cast_nullable_to_non_nullable
@@ -124,6 +153,10 @@ abstract class _$$ConnectionViewStateImplCopyWith<$Res>
     bool isConnecting,
     bool isConnected,
     bool isRequestingPermission,
+    bool isGeminiConnecting,
+    bool isGeminiConnected,
+    bool isGeminiStreaming,
+    String? geminiStatus,
     String? error,
     String? statusMessage,
   });
@@ -148,6 +181,10 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
     Object? isConnecting = null,
     Object? isConnected = null,
     Object? isRequestingPermission = null,
+    Object? isGeminiConnecting = null,
+    Object? isGeminiConnected = null,
+    Object? isGeminiStreaming = null,
+    Object? geminiStatus = freezed,
     Object? error = freezed,
     Object? statusMessage = freezed,
   }) {
@@ -173,6 +210,22 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
             ? _value.isRequestingPermission
             : isRequestingPermission // ignore: cast_nullable_to_non_nullable
                   as bool,
+        isGeminiConnecting: null == isGeminiConnecting
+            ? _value.isGeminiConnecting
+            : isGeminiConnecting // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isGeminiConnected: null == isGeminiConnected
+            ? _value.isGeminiConnected
+            : isGeminiConnected // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isGeminiStreaming: null == isGeminiStreaming
+            ? _value.isGeminiStreaming
+            : isGeminiStreaming // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        geminiStatus: freezed == geminiStatus
+            ? _value.geminiStatus
+            : geminiStatus // ignore: cast_nullable_to_non_nullable
+                  as String?,
         error: freezed == error
             ? _value.error
             : error // ignore: cast_nullable_to_non_nullable
@@ -195,6 +248,10 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     this.isConnecting = false,
     this.isConnected = false,
     this.isRequestingPermission = false,
+    this.isGeminiConnecting = false,
+    this.isGeminiConnected = false,
+    this.isGeminiStreaming = false,
+    this.geminiStatus,
     this.error,
     this.statusMessage,
   }) : _scannedDevices = scannedDevices;
@@ -220,6 +277,18 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
   @override
   @JsonKey()
   final bool isRequestingPermission;
+  // Gemini Live API state
+  @override
+  @JsonKey()
+  final bool isGeminiConnecting;
+  @override
+  @JsonKey()
+  final bool isGeminiConnected;
+  @override
+  @JsonKey()
+  final bool isGeminiStreaming;
+  @override
+  final String? geminiStatus;
   @override
   final String? error;
   @override
@@ -227,7 +296,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
 
   @override
   String toString() {
-    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, error: $error, statusMessage: $statusMessage)';
+    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
   }
 
   @override
@@ -247,6 +316,14 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
                 other.isConnected == isConnected) &&
             (identical(other.isRequestingPermission, isRequestingPermission) ||
                 other.isRequestingPermission == isRequestingPermission) &&
+            (identical(other.isGeminiConnecting, isGeminiConnecting) ||
+                other.isGeminiConnecting == isGeminiConnecting) &&
+            (identical(other.isGeminiConnected, isGeminiConnected) ||
+                other.isGeminiConnected == isGeminiConnected) &&
+            (identical(other.isGeminiStreaming, isGeminiStreaming) ||
+                other.isGeminiStreaming == isGeminiStreaming) &&
+            (identical(other.geminiStatus, geminiStatus) ||
+                other.geminiStatus == geminiStatus) &&
             (identical(other.error, error) || other.error == error) &&
             (identical(other.statusMessage, statusMessage) ||
                 other.statusMessage == statusMessage));
@@ -260,6 +337,10 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     isConnecting,
     isConnected,
     isRequestingPermission,
+    isGeminiConnecting,
+    isGeminiConnected,
+    isGeminiStreaming,
+    geminiStatus,
     error,
     statusMessage,
   );
@@ -283,6 +364,10 @@ abstract class _ConnectionViewState implements ConnectionViewState {
     final bool isConnecting,
     final bool isConnected,
     final bool isRequestingPermission,
+    final bool isGeminiConnecting,
+    final bool isGeminiConnected,
+    final bool isGeminiStreaming,
+    final String? geminiStatus,
     final String? error,
     final String? statusMessage,
   }) = _$ConnectionViewStateImpl;
@@ -296,7 +381,15 @@ abstract class _ConnectionViewState implements ConnectionViewState {
   @override
   bool get isConnected;
   @override
-  bool get isRequestingPermission;
+  bool get isRequestingPermission; // Gemini Live API state
+  @override
+  bool get isGeminiConnecting;
+  @override
+  bool get isGeminiConnected;
+  @override
+  bool get isGeminiStreaming;
+  @override
+  String? get geminiStatus;
   @override
   String? get error;
   @override

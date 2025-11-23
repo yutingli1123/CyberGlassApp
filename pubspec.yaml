@@ -27,6 +27,12 @@ dependencies:
   # Routing
   go_router: ^12.1.0
 
+  # Service Providers
+  web_socket_channel: ^3.0.3
+  sound_stream: ^0.4.2
+  record: ^6.1.2
+  image: ^4.5.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
