@@ -51,5 +51,9 @@
 	<string>This app requires Bluetooth to communicate with CyberGlass smart glasses</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app requires location permission to scan for nearby Bluetooth devices</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We need access to your microphone for voice chat with Gemini.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to send images to Gemini.</string>
 </dict>
 </plist>
