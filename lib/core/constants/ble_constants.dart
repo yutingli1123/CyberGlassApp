@@ -65,7 +65,12 @@ class BleConstants {
   static const int resolutionSXGA = 6;   // 1280x1024
   static const int resolutionUXGA = 7;   // 1600x1200
 
-  // Default video settings
+  // Default video settings (optimized for best quality per BLE_VIDEO_INTEGRATION.md)
   static const int defaultResolution = resolutionVGA;
-  static const int defaultQuality = 50;  // 10-63, lower = better quality
+  static const int defaultQuality = 15;  // 10-63, lower = better quality (recommended: 15)
+  static const int defaultFps = 2;       // 1-10, target frame rate (recommended: 2 for VGA)
+  static const int defaultChunkDelay = 80; // 0-255ms, delay between chunk batches (recommended: 80)
+
+  // Maximum FPS limit (limited by 100ms minimum frame interval)
+  static const int maxFps = 10;
 }

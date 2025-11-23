@@ -281,13 +281,17 @@ class VideoStreamService {
     }
   }
 
-  /// Start video stream with specified resolution and quality
+  /// Start video stream with specified resolution, quality, fps, and chunk delay
   ///
   /// [resolution] - Resolution index (0-7), see BleConstants.resolution*
   /// [quality] - JPEG quality (10-63), lower = better quality but larger file
+  /// [fps] - Target frame rate (1-10), actual may be lower due to BLE bandwidth
+  /// [chunkDelay] - Optional delay between chunk batches (0-255ms), null to use device default
   Future<void> startStream({
     int resolution = BleConstants.defaultResolution,
     int quality = BleConstants.defaultQuality,
+    int fps = BleConstants.defaultFps,
+    int? chunkDelay = BleConstants.defaultChunkDelay,
   }) async {
     if (_imageControlChar == null) {
       throw Exception('Service not initialized. Call initialize() first.');
@@ -298,21 +302,34 @@ class VideoStreamService {
       return;
     }
 
+    // Validate parameters
+    final clampedFps = fps.clamp(1, BleConstants.maxFps);
+    final clampedQuality = quality.clamp(10, 63);
+    final clampedResolution = resolution.clamp(0, 7);
+
     try {
       _updateState(VideoStreamState.starting);
 
       // Subscribe to notifications first
       await _subscribeToNotifications();
 
-      // Send start command: [3, resolution, quality]
-      final command = Uint8List.fromList([
+      // Send start command: [3, resolution, quality, fps] or [3, resolution, quality, fps, chunk_delay]
+      final List<int> commandList = [
         BleConstants.cmdStartVideoStream,
-        resolution,
-        quality,
-      ]);
+        clampedResolution,
+        clampedQuality,
+        clampedFps,
+      ];
+
+      // Add optional chunk delay (5th byte)
+      if (chunkDelay != null) {
+        commandList.add(chunkDelay.clamp(0, 255));
+      }
+
+      final command = Uint8List.fromList(commandList);
 
       await _imageControlChar!.write(command, withoutResponse: false);
-      print('Start stream command sent: resolution=$resolution, quality=$quality');
+      print('Start stream command sent: resolution=$clampedResolution, quality=$clampedQuality, fps=$clampedFps${chunkDelay != null ? ', chunkDelay=$chunkDelay' : ''}');
 
     } catch (e) {
       _updateState(VideoStreamState.error);

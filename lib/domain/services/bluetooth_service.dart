@@ -111,15 +111,19 @@ class BleService {
 
   // ============ Video Stream Methods ============
 
-  /// Start video stream with specified resolution and quality
+  /// Start video stream with specified resolution, quality, fps, and chunk delay
   ///
   /// [resolution] - Resolution index (0-7), use BleConstants.resolution*
   /// [quality] - JPEG quality (10-63), lower = better quality
+  /// [fps] - Target frame rate (1-10), actual may be lower due to BLE bandwidth
+  /// [chunkDelay] - Optional delay between chunk batches (0-255ms)
   ///
   /// Returns stream of VideoFrame objects
   Future<Stream<VideoFrame>?> startVideoStream({
     int resolution = BleConstants.defaultResolution,
     int quality = BleConstants.defaultQuality,
+    int fps = BleConstants.defaultFps,
+    int? chunkDelay = BleConstants.defaultChunkDelay,
   }) async {
     if (_videoStreamService == null) {
       throw Exception('Not connected to a device');
@@ -128,6 +132,8 @@ class BleService {
     await _videoStreamService!.startStream(
       resolution: resolution,
       quality: quality,
+      fps: fps,
+      chunkDelay: chunkDelay,
     );
 
     return _videoStreamService!.frameStream;
