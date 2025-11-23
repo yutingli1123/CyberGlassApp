@@ -27,4 +27,45 @@ class BleConstants {
   // Connection settings
   static const int scanTimeoutSeconds = 10;
   static const int connectionTimeoutSeconds = 10;
+
+  // All data channel UUIDs as a list for easy iteration
+  static const List<String> dataChannelUuids = [
+    charImageData1Uuid,
+    charImageData2Uuid,
+    charImageData3Uuid,
+    charImageData4Uuid,
+    charImageData5Uuid,
+    charImageData6Uuid,
+    charImageData7Uuid,
+    charImageData8Uuid,
+  ];
+
+  // Video stream commands
+  static const int cmdCancelTransfer = 0;
+  static const int cmdRetransmitChunks = 1;
+  static const int cmdStartVideoStream = 3;
+  static const int cmdStopVideoStream = 4;
+
+  // Image Info status codes
+  static const int statusIdle = 0;
+  static const int statusImageReady = 1;
+  static const int statusError = 2;
+  static const int statusImageTooLarge = 3;
+  static const int statusTransferComplete = 4;
+  static const int statusVideoStreamActive = 5;
+  static const int statusVideoFrameReady = 6;
+
+  // Resolution indices
+  static const int resolutionQQVGA = 0;  // 160x120
+  static const int resolutionQVGA = 1;   // 320x240
+  static const int resolutionVGA = 2;    // 640x480
+  static const int resolutionSVGA = 3;   // 800x600
+  static const int resolutionXGA = 4;    // 1024x768
+  static const int resolutionHD = 5;     // 1280x720
+  static const int resolutionSXGA = 6;   // 1280x1024
+  static const int resolutionUXGA = 7;   // 1600x1200
+
+  // Default video settings
+  static const int defaultResolution = resolutionVGA;
+  static const int defaultQuality = 50;  // 10-63, lower = better quality
 }
