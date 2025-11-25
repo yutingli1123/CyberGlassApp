@@ -2,12 +2,10 @@ import 'dart:async';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/ble_constants.dart';
-import 'video_stream_service.dart';
 
 /// Bluetooth service for managing CyberGlass device connection
 class BleService {
   BluetoothDevice? _connectedDevice;
-  VideoStreamService? _videoStreamService;
 
   // Connection state stream controller
   final _connectionStateController = StreamController<bool>.broadcast();
@@ -20,9 +18,6 @@ class BleService {
 
   /// Get the currently connected device
   BluetoothDevice? get connectedDevice => _connectedDevice;
-
-  /// Get the video stream service (available after connection)
-  VideoStreamService? get videoStreamService => _videoStreamService;
 
   /// Scan for CyberGlass devices continuously until stopped
   /// Returns a stream of scan results filtered by device name prefix
@@ -55,10 +50,6 @@ class BleService {
 
       _connectedDevice = device;
       _connectionStateController.add(true);
-
-      // Initialize video stream service
-      _videoStreamService = VideoStreamService(device);
-      await _videoStreamService!.initialize();
 
       // Listen to connection state changes
       device.connectionState.listen((state) {
@@ -96,63 +87,13 @@ class BleService {
 
   /// Handle disconnection event
   void _handleDisconnection() {
-    _videoStreamService?.dispose();
-    _videoStreamService = null;
     _connectedDevice = null;
     _connectionStateController.add(false);
   }
 
   /// Clean up resources
   void dispose() {
-    _videoStreamService?.dispose();
     _connectionStateController.close();
     disconnect();
   }
-
-  // ============ Video Stream Methods ============
-
-  /// Start video stream with specified resolution, quality, fps, and chunk delay
-  ///
-  /// [resolution] - Resolution index (0-7), use BleConstants.resolution*
-  /// [quality] - JPEG quality (10-63), lower = better quality
-  /// [fps] - Target frame rate (1-10), actual may be lower due to BLE bandwidth
-  /// [chunkDelay] - Optional delay between chunk batches (0-255ms)
-  ///
-  /// Returns stream of VideoFrame objects
-  Future<Stream<VideoFrame>?> startVideoStream({
-    int resolution = BleConstants.defaultResolution,
-    int quality = BleConstants.defaultQuality,
-    int fps = BleConstants.defaultFps,
-    int? chunkDelay = BleConstants.defaultChunkDelay,
-  }) async {
-    if (_videoStreamService == null) {
-      throw Exception('Not connected to a device');
-    }
-
-    await _videoStreamService!.startStream(
-      resolution: resolution,
-      quality: quality,
-      fps: fps,
-      chunkDelay: chunkDelay,
-    );
-
-    return _videoStreamService!.frameStream;
-  }
-
-  /// Stop video stream
-  Future<void> stopVideoStream() async {
-    await _videoStreamService?.stopStream();
-  }
-
-  /// Check if video is currently streaming
-  bool get isVideoStreaming => _videoStreamService?.isStreaming ?? false;
-
-  /// Get video stream state
-  VideoStreamState? get videoStreamState => _videoStreamService?.state;
-
-  /// Get FPS stream for monitoring performance
-  Stream<double>? get videoFpsStream => _videoStreamService?.fpsStream;
-
-  /// Get video state change stream
-  Stream<VideoStreamState>? get videoStateStream => _videoStreamService?.stateStream;
 }

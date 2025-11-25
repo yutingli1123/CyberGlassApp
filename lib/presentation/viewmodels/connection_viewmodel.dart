@@ -24,10 +24,6 @@ class ConnectionViewState with _$ConnectionViewState {
     @Default(false) bool isGeminiConnecting,
     @Default(false) bool isGeminiConnected,
     @Default(false) bool isGeminiStreaming,
-    // Video stream state
-    @Default(false) bool isVideoStreaming,
-    @Default(0) int frameCount,
-    @Default(0.0) double currentFps,
     String? geminiStatus,
     String? error,
     String? statusMessage,
@@ -49,9 +45,6 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
   final StorageService _storageService;
   final GeminiLiveService _geminiLiveService;
   StreamSubscription? _scanSubscription;
-  StreamSubscription? _videoFrameSubscription;
-  StreamSubscription? _videoFpsSubscription;
-  int _framesSentToGemini = 0;
 
   /// Set up Gemini Live Service callbacks
   void _setupGeminiCallbacks() {
@@ -128,75 +121,6 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 
   /// Get the Gemini Live Service instance
   GeminiLiveService get geminiService => _geminiLiveService;
-
-  /// Start video streaming and forward frames to Gemini
-  Future<void> _startVideoStreamWithGemini() async {
-    print('[ConnectionViewModel] Starting video stream with Gemini integration...');
-
-    try {
-      // Start the video stream with optimized settings
-      final frameStream = await _bluetoothService.startVideoStream();
-
-      if (frameStream == null) {
-        print('[ConnectionViewModel] Failed to start video stream');
-        return;
-      }
-
-      state = state.copyWith(
-        isVideoStreaming: true,
-        statusMessage: 'Video streaming started',
-      );
-
-      // Subscribe to video frames and forward to Gemini
-      _videoFrameSubscription = frameStream.listen((frame) async {
-        _framesSentToGemini++;
-        state = state.copyWith(frameCount: _framesSentToGemini);
-
-        // Send frame to Gemini if connected
-        if (_geminiLiveService.isConnected) {
-          await _geminiLiveService.sendImage(frame.jpegData);
-          print('[ConnectionViewModel] Frame ${frame.frameNumber} sent to Gemini (${frame.sizeInBytes} bytes)');
-        }
-      });
-
-      // Subscribe to FPS updates
-      final fpsStream = _bluetoothService.videoFpsStream;
-      if (fpsStream != null) {
-        _videoFpsSubscription = fpsStream.listen((fps) {
-          state = state.copyWith(currentFps: fps);
-        });
-      }
-
-      print('[ConnectionViewModel] Video stream started with Gemini integration');
-    } catch (e) {
-      print('[ConnectionViewModel] Failed to start video stream: $e');
-      state = state.copyWith(
-        isVideoStreaming: false,
-        statusMessage: 'Video stream error: $e',
-      );
-    }
-  }
-
-  /// Stop video streaming
-  Future<void> stopVideoStream() async {
-    print('[ConnectionViewModel] Stopping video stream...');
-
-    await _videoFrameSubscription?.cancel();
-    _videoFrameSubscription = null;
-
-    await _videoFpsSubscription?.cancel();
-    _videoFpsSubscription = null;
-
-    await _bluetoothService.stopVideoStream();
-
-    state = state.copyWith(
-      isVideoStreaming: false,
-      currentFps: 0.0,
-      statusMessage: 'Video stream stopped',
-    );
-
-    print('[ConnectionViewModel] Video stream stopped. Total frames sent: $_framesSentToGemini');
-  }
 
   /// Initialize: wait for Bluetooth and start scanning
   Future<void> initialize() async {
@@ -421,9 +345,6 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 
       // Automatically start Gemini Live session after BLE connection
       await _startGeminiSession();
-
-      // Start video streaming with Gemini integration
-      await _startVideoStreamWithGemini();
     } catch (e) {
       print('[ConnectionViewModel] Connection failed: $e');
       state = state.copyWith(
@@ -466,8 +387,6 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
   @override
   void dispose() {
     _scanSubscription?.cancel();
-    _videoFrameSubscription?.cancel();
-    _videoFpsSubscription?.cancel();
     _geminiLiveService.dispose();
     super.dispose();
   }
