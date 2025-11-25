@@ -25,11 +25,7 @@ mixin _$ConnectionViewState {
       throw _privateConstructorUsedError; // Gemini Live API state
   bool get isGeminiConnecting => throw _privateConstructorUsedError;
   bool get isGeminiConnected => throw _privateConstructorUsedError;
-  bool get isGeminiStreaming =>
-      throw _privateConstructorUsedError; // Video stream state
-  bool get isVideoStreaming => throw _privateConstructorUsedError;
-  int get frameCount => throw _privateConstructorUsedError;
-  double get currentFps => throw _privateConstructorUsedError;
+  bool get isGeminiStreaming => throw _privateConstructorUsedError;
   String? get geminiStatus => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
   String? get statusMessage => throw _privateConstructorUsedError;
@@ -57,9 +53,6 @@ abstract class $ConnectionViewStateCopyWith<$Res> {
     bool isGeminiConnecting,
     bool isGeminiConnected,
     bool isGeminiStreaming,
-    bool isVideoStreaming,
-    int frameCount,
-    double currentFps,
     String? geminiStatus,
     String? error,
     String? statusMessage,
@@ -89,9 +82,6 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
     Object? isGeminiConnecting = null,
     Object? isGeminiConnected = null,
     Object? isGeminiStreaming = null,
-    Object? isVideoStreaming = null,
-    Object? frameCount = null,
-    Object? currentFps = null,
     Object? geminiStatus = freezed,
     Object? error = freezed,
     Object? statusMessage = freezed,
@@ -130,18 +120,6 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
                 ? _value.isGeminiStreaming
                 : isGeminiStreaming // ignore: cast_nullable_to_non_nullable
                       as bool,
-            isVideoStreaming: null == isVideoStreaming
-                ? _value.isVideoStreaming
-                : isVideoStreaming // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            frameCount: null == frameCount
-                ? _value.frameCount
-                : frameCount // ignore: cast_nullable_to_non_nullable
-                      as int,
-            currentFps: null == currentFps
-                ? _value.currentFps
-                : currentFps // ignore: cast_nullable_to_non_nullable
-                      as double,
             geminiStatus: freezed == geminiStatus
                 ? _value.geminiStatus
                 : geminiStatus // ignore: cast_nullable_to_non_nullable
@@ -178,9 +156,6 @@ abstract class _$$ConnectionViewStateImplCopyWith<$Res>
     bool isGeminiConnecting,
     bool isGeminiConnected,
     bool isGeminiStreaming,
-    bool isVideoStreaming,
-    int frameCount,
-    double currentFps,
     String? geminiStatus,
     String? error,
     String? statusMessage,
@@ -209,9 +184,6 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
     Object? isGeminiConnecting = null,
     Object? isGeminiConnected = null,
     Object? isGeminiStreaming = null,
-    Object? isVideoStreaming = null,
-    Object? frameCount = null,
-    Object? currentFps = null,
     Object? geminiStatus = freezed,
     Object? error = freezed,
     Object? statusMessage = freezed,
@@ -250,18 +222,6 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
             ? _value.isGeminiStreaming
             : isGeminiStreaming // ignore: cast_nullable_to_non_nullable
                   as bool,
-        isVideoStreaming: null == isVideoStreaming
-            ? _value.isVideoStreaming
-            : isVideoStreaming // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        frameCount: null == frameCount
-            ? _value.frameCount
-            : frameCount // ignore: cast_nullable_to_non_nullable
-                  as int,
-        currentFps: null == currentFps
-            ? _value.currentFps
-            : currentFps // ignore: cast_nullable_to_non_nullable
-                  as double,
         geminiStatus: freezed == geminiStatus
             ? _value.geminiStatus
             : geminiStatus // ignore: cast_nullable_to_non_nullable
@@ -291,9 +251,6 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     this.isGeminiConnecting = false,
     this.isGeminiConnected = false,
     this.isGeminiStreaming = false,
-    this.isVideoStreaming = false,
-    this.frameCount = 0,
-    this.currentFps = 0.0,
     this.geminiStatus,
     this.error,
     this.statusMessage,
@@ -330,16 +287,6 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
   @override
   @JsonKey()
   final bool isGeminiStreaming;
-  // Video stream state
-  @override
-  @JsonKey()
-  final bool isVideoStreaming;
-  @override
-  @JsonKey()
-  final int frameCount;
-  @override
-  @JsonKey()
-  final double currentFps;
   @override
   final String? geminiStatus;
   @override
@@ -349,7 +296,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
 
   @override
   String toString() {
-    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, isVideoStreaming: $isVideoStreaming, frameCount: $frameCount, currentFps: $currentFps, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
+    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
   }
 
   @override
@@ -375,12 +322,6 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
                 other.isGeminiConnected == isGeminiConnected) &&
             (identical(other.isGeminiStreaming, isGeminiStreaming) ||
                 other.isGeminiStreaming == isGeminiStreaming) &&
-            (identical(other.isVideoStreaming, isVideoStreaming) ||
-                other.isVideoStreaming == isVideoStreaming) &&
-            (identical(other.frameCount, frameCount) ||
-                other.frameCount == frameCount) &&
-            (identical(other.currentFps, currentFps) ||
-                other.currentFps == currentFps) &&
             (identical(other.geminiStatus, geminiStatus) ||
                 other.geminiStatus == geminiStatus) &&
             (identical(other.error, error) || other.error == error) &&
@@ -399,9 +340,6 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     isGeminiConnecting,
     isGeminiConnected,
     isGeminiStreaming,
-    isVideoStreaming,
-    frameCount,
-    currentFps,
     geminiStatus,
     error,
     statusMessage,
@@ -429,9 +367,6 @@ abstract class _ConnectionViewState implements ConnectionViewState {
     final bool isGeminiConnecting,
     final bool isGeminiConnected,
     final bool isGeminiStreaming,
-    final bool isVideoStreaming,
-    final int frameCount,
-    final double currentFps,
     final String? geminiStatus,
     final String? error,
     final String? statusMessage,
@@ -452,13 +387,7 @@ abstract class _ConnectionViewState implements ConnectionViewState {
   @override
   bool get isGeminiConnected;
   @override
-  bool get isGeminiStreaming; // Video stream state
-  @override
-  bool get isVideoStreaming;
-  @override
-  int get frameCount;
-  @override
-  double get currentFps;
+  bool get isGeminiStreaming;
   @override
   String? get geminiStatus;
   @override
