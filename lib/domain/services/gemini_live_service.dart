@@ -57,14 +57,8 @@ class GeminiLiveService {
 
   /// API Key - should be passed during initialization
   late final String _apiKey;
-  final String _systemPrompt;
 
-  GeminiLiveService(
-    this._apiKey, {
-    String? systemPrompt,
-  }) : _systemPrompt = (systemPrompt?.trim().isNotEmpty ?? false)
-            ? systemPrompt!.trim()
-            : _defaultSystemPrompt;
+  GeminiLiveService(this._apiKey);
 
   /// Connect to Gemini Live API via WebSocket
   Future<bool> connect() async {
@@ -92,7 +86,7 @@ class GeminiLiveService {
         'model': model,
         'systemInstruction': {
           'parts': [
-            {'text': _systemPrompt},
+            {'text': _defaultSystemPrompt},
           ],
         },
         'generationConfig': {
