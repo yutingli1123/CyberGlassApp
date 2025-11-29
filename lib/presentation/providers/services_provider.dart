@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/services/bluetooth_service.dart';
 import '../../domain/services/storage_service.dart';
 import '../../domain/services/gemini_live_service.dart';
+import '../../domain/services/conversation_log_service.dart';
 
 /// Provider for BleService singleton
 final bluetoothServiceProvider = Provider<BleService>((ref) {
@@ -18,6 +19,11 @@ final bluetoothServiceProvider = Provider<BleService>((ref) {
 /// Provider for StorageService singleton
 final storageServiceProvider = Provider<StorageService>((ref) {
   return StorageService();
+});
+
+/// Provider for ConversationLogService singleton
+final conversationLogServiceProvider = Provider<ConversationLogService>((ref) {
+  return ConversationLogService();
 });
 
 /// Provider for Gemini API key

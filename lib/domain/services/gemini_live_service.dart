@@ -50,6 +50,9 @@ class GeminiLiveService {
   Function(bool)? onListeningStateChanged; // User is speaking
   Function(bool)? onSpeakingStateChanged; // Gemini is speaking
   Function()? onUserStoppedSpeaking; // User finished speaking, entering processing state
+  Function(Uint8List)? onAudioReceived; // Callback for received audio data
+  Function(String)? onOutputTranscription; // Gemini's audio transcription
+  Function(String)? onInputTranscription; // User's audio transcription
 
   // Silence detection for "latency mask"
   Timer? _silenceTimer;
@@ -82,30 +85,40 @@ class GeminiLiveService {
       await _channel!.ready;
       onStatusChanged?.call('WebSocket connected');
 
-      // Send setup message exactly like Python script
-      final setup = {
-        'model': model,
-        'systemInstruction': {
-          'parts': [
-            {'text': _defaultSystemPrompt},
-          ],
-        },
-        'generationConfig': {
-          'responseModalities': ['AUDIO'],
+      // Send setup message with audio and transcriptions
+      final setupMessage = {
+        'setup': {
+          'model': model,
+          'generationConfig': {
+            'responseModalities': ['AUDIO'],
+          },
+          'systemInstruction': {
+            'parts': [
+              {
+                'text': _defaultSystemPrompt,
+              }
+            ]
+          },
+          'outputAudioTranscription': {},  // Enable output transcription
+          'inputAudioTranscription': {},   // Enable input transcription
         },
       };
 
-      _channel!.sink.add(jsonEncode({'setup': setup}));
+      print('[GeminiLive] Setup with transcriptions enabled');
+
+      _channel!.sink.add(jsonEncode(setupMessage));
       onStatusChanged?.call('Setup message sent');
 
       // Start listening for responses
       _wsSubscription = _channel!.stream.listen(
         _handleWebSocketMessage,
         onError: (error) {
+          print('[GeminiLive] WebSocket ERROR: $error');
           onStatusChanged?.call('WebSocket error: $error');
           disconnect();
         },
         onDone: () {
+          print('[GeminiLive] WebSocket CLOSED');
           onStatusChanged?.call('WebSocket closed');
           _isConnected = false;
         },
@@ -290,6 +303,26 @@ class GeminiLiveService {
         final serverContent = data['serverContent'] as Map<String, dynamic>;
         print('[GeminiLive] serverContent keys: ${serverContent.keys.toList()}');
 
+        // Handle output transcription (Gemini's audio transcription)
+        if (serverContent.containsKey('outputTranscription')) {
+          final transcription = serverContent['outputTranscription'] as Map<String, dynamic>;
+          if (transcription.containsKey('text')) {
+            final text = transcription['text'] as String;
+            print('[GeminiLive] Output transcription: $text');
+            onOutputTranscription?.call(text);
+          }
+        }
+
+        // Handle input transcription (User's audio transcription)
+        if (serverContent.containsKey('inputTranscription')) {
+          final transcription = serverContent['inputTranscription'] as Map<String, dynamic>;
+          if (transcription.containsKey('text')) {
+            final text = transcription['text'] as String;
+            print('[GeminiLive] Input transcription: $text');
+            onInputTranscription?.call(text);
+          }
+        }
+
         // Check for interruption (critical for UX)
         if (serverContent['interrupted'] == true) {
           onStatusChanged?.call('User speaking - interrupting Gemini');
@@ -345,6 +378,9 @@ class GeminiLiveService {
                   }
 
                   print('[GeminiLive] Audio chunk received: ${audioBytes.length} bytes, queue size: ${_audioOutQueue.length}');
+
+                  // Notify callback with audio data
+                  onAudioReceived?.call(Uint8List.fromList(audioBytes));
                 }
               }
 
@@ -451,7 +487,7 @@ class GeminiLiveService {
       };
 
       _channel?.sink.add(jsonEncode(message));
-      onStatusChanged?.call('Image sent (${jpegBytes.length} bytes)');
+      // Removed frequent status update to reduce overhead
     } catch (e) {
       onStatusChanged?.call('Image send error: $e');
     }

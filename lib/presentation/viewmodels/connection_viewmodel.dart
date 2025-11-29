@@ -7,6 +7,7 @@ import '../../data/models/glass_device.dart';
 import '../../domain/services/bluetooth_service.dart';
 import '../../domain/services/storage_service.dart';
 import '../../domain/services/gemini_live_service.dart';
+import '../../domain/services/conversation_log_service.dart';
 import '../providers/services_provider.dart';
 
 part 'connection_viewmodel.freezed.dart';
@@ -44,6 +45,7 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
     this._bluetoothService,
     this._storageService,
     this._geminiLiveService,
+    this._conversationLogService,
   ) : super(const ConnectionViewState()) {
     // Set up Gemini callbacks
     _setupGeminiCallbacks();
@@ -52,10 +54,19 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
   final BleService _bluetoothService;
   final StorageService _storageService;
   final GeminiLiveService _geminiLiveService;
+  final ConversationLogService _conversationLogService;
   StreamSubscription? _scanSubscription;
   StreamSubscription? _videoFrameSubscription;
   StreamSubscription? _videoFpsSubscription;
   int _framesSentToGemini = 0;
+  Uint8List? _lastImageSent; // Keep track of last image for logging
+
+  // Accumulate Gemini's response until turn complete
+  String _currentGeminiResponse = '';
+  String _currentUserInput = '';
+
+  // DISABLE LOGGING - set to false to turn off all logging
+  static const bool _enableLogging = false;
 
   /// Set up Gemini Live Service callbacks
   void _setupGeminiCallbacks() {
@@ -64,16 +75,50 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       state = state.copyWith(geminiStatus: status);
     };
 
-    _geminiLiveService.onTextReceived = (text) {
-      print('[GeminiLive] Text: $text');
+    // Handle Gemini's audio transcription - accumulate until turn complete
+    _geminiLiveService.onOutputTranscription = (text) {
+      print('[GeminiLive] Gemini said (partial): $text');
+      _currentGeminiResponse += text;
+    };
+
+    // Handle user's audio transcription - accumulate until turn complete
+    _geminiLiveService.onInputTranscription = (text) {
+      print('[GeminiLive] User said (partial): $text');
+      _currentUserInput += text;
     };
 
     _geminiLiveService.onInterrupted = () {
       print('[GeminiLive] User interrupted');
+      // Clear accumulated responses when interrupted
+      _currentGeminiResponse = '';
+      _currentUserInput = '';
     };
 
     _geminiLiveService.onTurnComplete = () {
       print('[GeminiLive] Turn complete');
+
+      // Save user's complete input if available
+      if (_currentUserInput.isNotEmpty) {
+        print('[Log] Saving user input: $_currentUserInput');
+        _conversationLogService.addUserTextMessage(
+          content: _currentUserInput,
+          imageBytes: _lastImageSent,
+        ).then((_) => print('[Log] User message saved'));
+      }
+
+      // Save Gemini's complete response if available
+      if (_currentGeminiResponse.isNotEmpty) {
+        print('[Log] Saving Gemini response: $_currentGeminiResponse');
+        _conversationLogService.addGeminiResponse(
+          content: _currentGeminiResponse,
+          imageBytes: null,
+        ).then((_) => print('[Log] Gemini response saved'));
+      }
+
+      // Clear accumulated text and last image
+      _currentGeminiResponse = '';
+      _currentUserInput = '';
+      _lastImageSent = null;
     };
 
     _geminiLiveService.onListeningStateChanged = (isListening) {
@@ -114,6 +159,10 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       final connected = await _geminiLiveService.connect();
 
       if (connected) {
+        // Start a new conversation log session
+        await _conversationLogService.startNewSession();
+        print('[ConnectionViewModel] Started conversation log session');
+
         // Start audio streaming
         await _geminiLiveService.startAudioStream();
 
@@ -141,6 +190,11 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
   /// Stop Gemini Live session
   Future<void> stopGeminiSession() async {
     print('[ConnectionViewModel] Stopping Gemini Live session...');
+
+    // End the conversation log session
+    await _conversationLogService.endCurrentSession();
+    print('[ConnectionViewModel] Ended conversation log session');
+
     await _geminiLiveService.disconnect();
     state = state.copyWith(
       isGeminiConnected: false,
@@ -187,7 +241,10 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 
   /// Send image to Gemini
   Future<void> sendImageToGemini(List<int> imageBytes) async {
-    await _geminiLiveService.sendImage(Uint8List.fromList(imageBytes));
+    final imageData = Uint8List.fromList(imageBytes);
+    // Store the last image for logging purposes
+    _lastImageSent = imageData;
+    await _geminiLiveService.sendImage(imageData);
   }
 
   /// Get the Gemini Live Service instance
@@ -218,8 +275,14 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 
         // Send frame to Gemini if connected
         if (_geminiLiveService.isConnected) {
+          // Store the last image for logging purposes
+          _lastImageSent = frame.jpegData;
           await _geminiLiveService.sendImage(frame.jpegData);
-          print('[ConnectionViewModel] Frame ${frame.frameNumber} sent to Gemini (${frame.sizeInBytes} bytes)');
+          if (_framesSentToGemini % 30 == 0) {
+            print('[ConnectionViewModel] Frame ${frame.frameNumber} sent to Gemini (${frame.sizeInBytes} bytes) - Total sent: $_framesSentToGemini');
+          }
+        } else {
+          print('[ConnectionViewModel] WARNING: Gemini not connected, skipping frame ${frame.frameNumber}');
         }
       });
 
@@ -543,5 +606,11 @@ final connectionViewModelProvider =
   final bluetoothService = ref.watch(bluetoothServiceProvider);
   final storageService = ref.watch(storageServiceProvider);
   final geminiService = ref.watch(geminiLiveServiceProvider);
-  return ConnectionViewModel(bluetoothService, storageService, geminiService);
+  final conversationLogService = ref.watch(conversationLogServiceProvider);
+  return ConnectionViewModel(
+    bluetoothService,
+    storageService,
+    geminiService,
+    conversationLogService,
+  );
 });

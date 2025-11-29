@@ -23,6 +23,7 @@ dependencies:
 
   # Storage
   shared_preferences: ^2.2.2
+  path_provider: ^2.1.1
 
   # Routing
   go_router: ^12.1.0
@@ -32,6 +33,9 @@ dependencies:
   sound_stream: ^0.4.2
   record: ^6.1.2
   image: ^4.5.4
+
+  # Utilities
+  uuid: ^4.2.1
 
 dev_dependencies:
   flutter_test:

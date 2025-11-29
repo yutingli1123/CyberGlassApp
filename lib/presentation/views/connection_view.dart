@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodels/connection_viewmodel.dart';
+import 'conversation_history_view.dart';
 
 /// Connection screen with animated orb
 class ConnectionView extends ConsumerStatefulWidget {
@@ -85,6 +86,24 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.black87),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ConversationHistoryView(),
+                ),
+              );
+            },
+            tooltip: '对话历史',
+          ),
+        ],
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
