@@ -150,7 +150,7 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
   }
 
   /// Toggle audio streaming on/off
-  void toggleAudioStream() {
+  Future<void> toggleAudioStream() async {
     // Only allow toggle if Gemini is connected
     if (!state.isGeminiConnected) {
       print('[ConnectionViewModel] Cannot toggle audio - Gemini not connected');
@@ -168,8 +168,8 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
         geminiStatus: 'Audio paused - tap to resume',
       );
 
-      // Pause without stopping audio devices
-      _geminiLiveService.pauseAudioStream();
+      // Pause without stopping audio devices (async to clear buffer)
+      await _geminiLiveService.pauseAudioStream();
     } else {
       // Currently paused - resume audio stream
       print('[ConnectionViewModel] Resuming audio stream...');
