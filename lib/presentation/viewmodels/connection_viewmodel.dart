@@ -24,6 +24,8 @@ class ConnectionViewState with _$ConnectionViewState {
     @Default(false) bool isGeminiConnecting,
     @Default(false) bool isGeminiConnected,
     @Default(false) bool isGeminiStreaming,
+    @Default(false) bool isListening, // User is speaking (microphone active)
+    @Default(false) bool isSpeaking, // Gemini is speaking (audio playback)
     // Video stream state
     @Default(false) bool isVideoStreaming,
     @Default(0) int frameCount,
@@ -70,6 +72,16 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 
     _geminiLiveService.onTurnComplete = () {
       print('[GeminiLive] Turn complete');
+    };
+
+    _geminiLiveService.onListeningStateChanged = (isListening) {
+      print('[GeminiLive] Listening state changed: $isListening');
+      state = state.copyWith(isListening: isListening);
+    };
+
+    _geminiLiveService.onSpeakingStateChanged = (isSpeaking) {
+      print('[GeminiLive] Speaking state changed: $isSpeaking');
+      state = state.copyWith(isSpeaking: isSpeaking);
     };
   }
 

@@ -65,8 +65,16 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
 
     // Determine status text - only three states
     String statusText;
-    if (state.isConnected) {
-      statusText = 'Connected';
+    if (state.isSpeaking) {
+      statusText = 'Speaking';
+    } else if (state.isListening) {
+      statusText = 'Listening';
+    } else if (state.isConnected) {
+      if (state.isGeminiConnected && !state.isListening && !state.isSpeaking) {
+        statusText = 'Processing';
+      } else {
+        statusText = 'Connected';
+      }
     } else if (state.isConnecting) {
       statusText = state.error != null ? 'Still Connecting' : 'Connecting';
     } else {
@@ -241,8 +249,15 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
 
   /// Get orb color based on connection state
   Color _getOrbColor(ConnectionViewState state) {
-    if (state.isConnected) {
-      return Colors.green;
+    if (state.isSpeaking) {
+      return Colors.deepPurpleAccent; // Speaking
+    } else if (state.isListening) {
+      return Colors.lightBlueAccent; // Listening
+    } else if (state.isConnected) {
+      if (state.isGeminiConnected && !state.isListening && !state.isSpeaking) {
+        return Colors.purpleAccent; // Processing
+      }
+      return Colors.green; // Connected (Idle)
     } else if (state.isConnecting) {
       return Colors.orange;
     } else {

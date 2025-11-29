@@ -30,6 +30,7 @@ class GeminiLiveService {
   // State
   bool _isConnected = false;
   bool _isPlaying = false;
+  bool _isListening = false; // User is currently speaking
   bool _shouldQuit = false;
 
   // Audio output queue (mimics Python's audio_in_queue)
@@ -42,6 +43,8 @@ class GeminiLiveService {
   Function()? onTurnComplete;
   Function()? onInterrupted;
   Function()? onMicActivityStopped; // For "latency mask" haptic feedback
+  Function(bool)? onListeningStateChanged; // User is speaking
+  Function(bool)? onSpeakingStateChanged; // Gemini is speaking
 
   // Silence detection for "latency mask"
   Timer? _silenceTimer;
@@ -177,6 +180,10 @@ class GeminiLiveService {
       // Start playback processing
       _startPlaybackTimer();
 
+      // Set listening state to true when audio stream starts
+      _isListening = true;
+      onListeningStateChanged?.call(true);
+
       onStatusChanged?.call('Audio streaming started (with AEC)');
     } catch (e) {
       onStatusChanged?.call('Audio stream error: $e');
@@ -204,6 +211,7 @@ class GeminiLiveService {
       // User stopped speaking - start silence timer
       _silenceTimer = Timer(silenceThreshold, () {
         _wasUserSpeaking = false;
+
         // Trigger "latency mask" - haptic feedback
         onMicActivityStopped?.call();
         HapticFeedback.lightImpact();
@@ -267,7 +275,10 @@ class GeminiLiveService {
 
         // Check for turn complete
         if (serverContent['turnComplete'] == true) {
-          _isPlaying = false;
+          if (_isPlaying) {
+            _isPlaying = false;
+            onSpeakingStateChanged?.call(false);
+          }
           onTurnComplete?.call();
           onStatusChanged?.call('Turn complete - continue speaking');
           return;
@@ -295,7 +306,13 @@ class GeminiLiveService {
                 if (mimeType != null && mimeType.contains('audio') && dataStr != null) {
                   final audioBytes = base64Decode(dataStr);
                   _audioOutQueue.add(Uint8List.fromList(audioBytes));
-                  _isPlaying = true;
+
+                  // Update speaking state
+                  if (!_isPlaying) {
+                    _isPlaying = true;
+                    onSpeakingStateChanged?.call(true);
+                  }
+
                   print('[GeminiLive] Audio chunk received: ${audioBytes.length} bytes, queue size: ${_audioOutQueue.length}');
                 }
               }
@@ -316,7 +333,10 @@ class GeminiLiveService {
 
   /// Handle interruption - clear audio queue immediately
   void _handleInterruption() {
-    _isPlaying = false;
+    if (_isPlaying) {
+      _isPlaying = false;
+      onSpeakingStateChanged?.call(false);
+    }
 
     // Clear the audio queue (mimics Python's while not queue.empty())
     _audioOutQueue.clear();
@@ -416,6 +436,16 @@ class GeminiLiveService {
     _silenceTimer = null;
 
     _audioOutQueue.clear();
+
+    // Reset listening and speaking states
+    if (_isListening) {
+      _isListening = false;
+      onListeningStateChanged?.call(false);
+    }
+    if (_isPlaying) {
+      _isPlaying = false;
+      onSpeakingStateChanged?.call(false);
+    }
 
     onStatusChanged?.call('Audio streaming stopped');
   }
