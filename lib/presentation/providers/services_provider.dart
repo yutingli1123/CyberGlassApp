@@ -30,10 +30,17 @@ final geminiApiKeyProvider = Provider<String>((ref) {
   return apiKey;
 });
 
+/// Optional system prompt for Gemini Live - pass via --dart-define=GEMINI_SYSTEM_PROMPT="Your prompt"
+final geminiSystemPromptProvider = Provider<String?>((ref) {
+  const prompt = String.fromEnvironment('GEMINI_SYSTEM_PROMPT', defaultValue: '');
+  return prompt.isEmpty ? null : prompt;
+});
+
 /// Provider for GeminiLiveService singleton
 final geminiLiveServiceProvider = Provider<GeminiLiveService>((ref) {
   final apiKey = ref.watch(geminiApiKeyProvider);
-  final service = GeminiLiveService(apiKey);
+  final systemPrompt = ref.watch(geminiSystemPromptProvider);
+  final service = GeminiLiveService(apiKey, systemPrompt: systemPrompt);
 
   // Dispose when provider is destroyed
   ref.onDispose(() {
