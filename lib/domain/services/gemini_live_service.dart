@@ -17,6 +17,8 @@ class GeminiLiveService {
   static const int receiveSampleRate = 24000;
   static const int channels = 1;
   static const String model = 'models/gemini-2.0-flash-live-001';
+  static const String _defaultSystemPrompt =
+      'You are CyberGlass, a concise voice-first assistant. Keep replies short, avoid fillers, and prefer actionable guidance.';
 
   // WebSocket
   WebSocketChannel? _channel;
@@ -55,8 +57,14 @@ class GeminiLiveService {
 
   /// API Key - should be passed during initialization
   late final String _apiKey;
+  final String _systemPrompt;
 
-  GeminiLiveService(this._apiKey);
+  GeminiLiveService(
+    this._apiKey, {
+    String? systemPrompt,
+  }) : _systemPrompt = (systemPrompt?.trim().isNotEmpty ?? false)
+            ? systemPrompt!.trim()
+            : _defaultSystemPrompt;
 
   /// Connect to Gemini Live API via WebSocket
   Future<bool> connect() async {
@@ -80,16 +88,19 @@ class GeminiLiveService {
       onStatusChanged?.call('WebSocket connected');
 
       // Send setup message exactly like Python script
-      final setupMessage = {
-        'setup': {
-          'model': model,
-          'generationConfig': {
-            'responseModalities': ['AUDIO'],
-          },
+      final setup = {
+        'model': model,
+        'systemInstruction': {
+          'parts': [
+            {'text': _systemPrompt},
+          ],
+        },
+        'generationConfig': {
+          'responseModalities': ['AUDIO'],
         },
       };
 
-      _channel!.sink.add(jsonEncode(setupMessage));
+      _channel!.sink.add(jsonEncode({'setup': setup}));
       onStatusChanged?.call('Setup message sent');
 
       // Start listening for responses
