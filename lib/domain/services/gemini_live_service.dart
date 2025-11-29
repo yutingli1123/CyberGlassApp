@@ -201,7 +201,7 @@ class GeminiLiveService {
     final rms = sum / samples.length;
 
     // Threshold for detecting speech (adjust as needed)
-    const double speechThreshold = 3000000; // Increased to reduce sensitivity to background noise
+    const double speechThreshold = 5000000; // Increased to reduce sensitivity to background noise
 
     if (rms > speechThreshold) {
       _wasUserSpeaking = true;
