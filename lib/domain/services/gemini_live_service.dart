@@ -31,6 +31,7 @@ class GeminiLiveService {
   bool _isConnected = false;
   bool _isPlaying = false;
   bool _isListening = false; // User is currently speaking
+  bool _turnComplete = false; // Track if turn is complete but audio still playing
   bool _shouldQuit = false;
 
   // Audio output queue (mimics Python's audio_in_queue)
@@ -45,6 +46,7 @@ class GeminiLiveService {
   Function()? onMicActivityStopped; // For "latency mask" haptic feedback
   Function(bool)? onListeningStateChanged; // User is speaking
   Function(bool)? onSpeakingStateChanged; // Gemini is speaking
+  Function()? onUserStoppedSpeaking; // User finished speaking, entering processing state
 
   // Silence detection for "latency mask"
   Timer? _silenceTimer;
@@ -180,8 +182,10 @@ class GeminiLiveService {
       // Start playback processing
       _startPlaybackTimer();
 
-      // Set listening state to true when audio stream starts
+      // Reset states when audio stream starts
       _isListening = true;
+      _turnComplete = false;
+      _wasUserSpeaking = false;
       onListeningStateChanged?.call(true);
 
       onStatusChanged?.call('Audio streaming started (with AEC)');
@@ -201,7 +205,7 @@ class GeminiLiveService {
     final rms = sum / samples.length;
 
     // Threshold for detecting speech (adjust as needed)
-    const double speechThreshold = 5000000; // Increased to reduce sensitivity to background noise
+    const double speechThreshold = 5000000; // High threshold to prevent echo-triggered interruptions
 
     if (rms > speechThreshold) {
       _wasUserSpeaking = true;
@@ -212,9 +216,12 @@ class GeminiLiveService {
       _silenceTimer = Timer(silenceThreshold, () {
         _wasUserSpeaking = false;
 
+        // Notify that user stopped speaking (entering processing state)
+        onUserStoppedSpeaking?.call();
+
         // Trigger "latency mask" - haptic feedback
         onMicActivityStopped?.call();
-        HapticFeedback.lightImpact();
+        HapticFeedback.heavyImpact();
       });
     }
   }
@@ -225,7 +232,6 @@ class GeminiLiveService {
     int chunkCount = 0;
     _playbackTimer = Timer.periodic(const Duration(milliseconds: 10), (_) {
       // Play audio whenever there's data in the queue
-      // Don't check _isPlaying - it gets set false on turn complete before queue empties
       if (_audioOutQueue.isNotEmpty) {
         final chunk = _audioOutQueue.removeAt(0);
         _player.writeChunk(chunk);
@@ -233,6 +239,13 @@ class GeminiLiveService {
         if (chunkCount % 10 == 0) {
           print('[GeminiLive] Played $chunkCount chunks, queue: ${_audioOutQueue.length}');
         }
+      } else if (_turnComplete && _isPlaying) {
+        // Queue is empty and turn is complete - stop speaking
+        print('[GeminiLive] Audio queue empty and turn complete - stopping speaking state');
+        print('[GeminiLive] Total chunks played: $chunkCount');
+        _isPlaying = false;
+        _turnComplete = false;
+        onSpeakingStateChanged?.call(false);
       }
     });
   }
@@ -275,10 +288,10 @@ class GeminiLiveService {
 
         // Check for turn complete
         if (serverContent['turnComplete'] == true) {
-          if (_isPlaying) {
-            _isPlaying = false;
-            onSpeakingStateChanged?.call(false);
-          }
+          // Mark turn as complete, but don't stop speaking yet
+          // Speaking will be stopped when audio queue is empty
+          print('[GeminiLive] Turn complete received, queue size: ${_audioOutQueue.length}, isPlaying: $_isPlaying');
+          _turnComplete = true;
           onTurnComplete?.call();
           onStatusChanged?.call('Turn complete - continue speaking');
           return;
@@ -332,17 +345,39 @@ class GeminiLiveService {
   }
 
   /// Handle interruption - clear audio queue immediately
-  void _handleInterruption() {
+  Future<void> _handleInterruption() async {
+    print('[GeminiLive] Handling interruption - clearing queue and restarting player');
+
     if (_isPlaying) {
       _isPlaying = false;
       onSpeakingStateChanged?.call(false);
     }
 
-    // Clear the audio queue (mimics Python's while not queue.empty())
+    // Reset turn complete flag
+    _turnComplete = false;
+
+    // Clear the audio queue
     _audioOutQueue.clear();
 
-    // Don't call _player.stop() - it stops the player permanently
-    // Just clearing the queue is enough to stop current audio
+    // Stop and restart player to clear its internal buffer
+    try {
+      await _player.stop();
+      await _player.start();
+      print('[GeminiLive] Player restarted to clear buffer');
+    } catch (e) {
+      print('[GeminiLive] Error restarting player: $e');
+      // If restart fails, try to reinitialize
+      try {
+        await _player.initialize(
+          sampleRate: receiveSampleRate,
+          showLogs: false,
+        );
+        await _player.start();
+        print('[GeminiLive] Player reinitialized');
+      } catch (e2) {
+        print('[GeminiLive] Error reinitializing player: $e2');
+      }
+    }
 
     onStatusChanged?.call('Audio playback stopped and queue cleared');
   }

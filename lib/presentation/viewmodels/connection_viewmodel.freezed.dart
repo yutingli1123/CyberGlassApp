@@ -30,6 +30,10 @@ mixin _$ConnectionViewState {
       throw _privateConstructorUsedError; // User is speaking (microphone active)
   bool get isSpeaking =>
       throw _privateConstructorUsedError; // Gemini is speaking (audio playback)
+  bool get isPaused =>
+      throw _privateConstructorUsedError; // Audio stream is paused by user
+  bool get isProcessing =>
+      throw _privateConstructorUsedError; // Gemini is processing user input
   // Video stream state
   bool get isVideoStreaming => throw _privateConstructorUsedError;
   int get frameCount => throw _privateConstructorUsedError;
@@ -63,6 +67,8 @@ abstract class $ConnectionViewStateCopyWith<$Res> {
     bool isGeminiStreaming,
     bool isListening,
     bool isSpeaking,
+    bool isPaused,
+    bool isProcessing,
     bool isVideoStreaming,
     int frameCount,
     double currentFps,
@@ -97,6 +103,8 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
     Object? isGeminiStreaming = null,
     Object? isListening = null,
     Object? isSpeaking = null,
+    Object? isPaused = null,
+    Object? isProcessing = null,
     Object? isVideoStreaming = null,
     Object? frameCount = null,
     Object? currentFps = null,
@@ -145,6 +153,14 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
             isSpeaking: null == isSpeaking
                 ? _value.isSpeaking
                 : isSpeaking // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isPaused: null == isPaused
+                ? _value.isPaused
+                : isPaused // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isProcessing: null == isProcessing
+                ? _value.isProcessing
+                : isProcessing // ignore: cast_nullable_to_non_nullable
                       as bool,
             isVideoStreaming: null == isVideoStreaming
                 ? _value.isVideoStreaming
@@ -196,6 +212,8 @@ abstract class _$$ConnectionViewStateImplCopyWith<$Res>
     bool isGeminiStreaming,
     bool isListening,
     bool isSpeaking,
+    bool isPaused,
+    bool isProcessing,
     bool isVideoStreaming,
     int frameCount,
     double currentFps,
@@ -229,6 +247,8 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
     Object? isGeminiStreaming = null,
     Object? isListening = null,
     Object? isSpeaking = null,
+    Object? isPaused = null,
+    Object? isProcessing = null,
     Object? isVideoStreaming = null,
     Object? frameCount = null,
     Object? currentFps = null,
@@ -278,6 +298,14 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
             ? _value.isSpeaking
             : isSpeaking // ignore: cast_nullable_to_non_nullable
                   as bool,
+        isPaused: null == isPaused
+            ? _value.isPaused
+            : isPaused // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isProcessing: null == isProcessing
+            ? _value.isProcessing
+            : isProcessing // ignore: cast_nullable_to_non_nullable
+                  as bool,
         isVideoStreaming: null == isVideoStreaming
             ? _value.isVideoStreaming
             : isVideoStreaming // ignore: cast_nullable_to_non_nullable
@@ -321,6 +349,8 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     this.isGeminiStreaming = false,
     this.isListening = false,
     this.isSpeaking = false,
+    this.isPaused = false,
+    this.isProcessing = false,
     this.isVideoStreaming = false,
     this.frameCount = 0,
     this.currentFps = 0.0,
@@ -368,6 +398,14 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
   @JsonKey()
   final bool isSpeaking;
   // Gemini is speaking (audio playback)
+  @override
+  @JsonKey()
+  final bool isPaused;
+  // Audio stream is paused by user
+  @override
+  @JsonKey()
+  final bool isProcessing;
+  // Gemini is processing user input
   // Video stream state
   @override
   @JsonKey()
@@ -387,7 +425,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
 
   @override
   String toString() {
-    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, isListening: $isListening, isSpeaking: $isSpeaking, isVideoStreaming: $isVideoStreaming, frameCount: $frameCount, currentFps: $currentFps, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
+    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, isListening: $isListening, isSpeaking: $isSpeaking, isPaused: $isPaused, isProcessing: $isProcessing, isVideoStreaming: $isVideoStreaming, frameCount: $frameCount, currentFps: $currentFps, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
   }
 
   @override
@@ -417,6 +455,10 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
                 other.isListening == isListening) &&
             (identical(other.isSpeaking, isSpeaking) ||
                 other.isSpeaking == isSpeaking) &&
+            (identical(other.isPaused, isPaused) ||
+                other.isPaused == isPaused) &&
+            (identical(other.isProcessing, isProcessing) ||
+                other.isProcessing == isProcessing) &&
             (identical(other.isVideoStreaming, isVideoStreaming) ||
                 other.isVideoStreaming == isVideoStreaming) &&
             (identical(other.frameCount, frameCount) ||
@@ -443,6 +485,8 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     isGeminiStreaming,
     isListening,
     isSpeaking,
+    isPaused,
+    isProcessing,
     isVideoStreaming,
     frameCount,
     currentFps,
@@ -475,6 +519,8 @@ abstract class _ConnectionViewState implements ConnectionViewState {
     final bool isGeminiStreaming,
     final bool isListening,
     final bool isSpeaking,
+    final bool isPaused,
+    final bool isProcessing,
     final bool isVideoStreaming,
     final int frameCount,
     final double currentFps,
@@ -503,6 +549,10 @@ abstract class _ConnectionViewState implements ConnectionViewState {
   bool get isListening; // User is speaking (microphone active)
   @override
   bool get isSpeaking; // Gemini is speaking (audio playback)
+  @override
+  bool get isPaused; // Audio stream is paused by user
+  @override
+  bool get isProcessing; // Gemini is processing user input
   // Video stream state
   @override
   bool get isVideoStreaming;

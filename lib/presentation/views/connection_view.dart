@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodels/connection_viewmodel.dart';
 
@@ -63,18 +64,18 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
   Widget build(BuildContext context) {
     final state = ref.watch(connectionViewModelProvider);
 
-    // Determine status text - only three states
+    // Determine status text
     String statusText;
     if (state.isSpeaking) {
       statusText = 'Speaking';
+    } else if (state.isProcessing) {
+      statusText = 'Processing';
     } else if (state.isListening) {
       statusText = 'Listening';
+    } else if (state.isPaused) {
+      statusText = 'Paused';
     } else if (state.isConnected) {
-      if (state.isGeminiConnected && !state.isListening && !state.isSpeaking) {
-        statusText = 'Processing';
-      } else {
-        statusText = 'Connected';
-      }
+      statusText = 'Connected';
     } else if (state.isConnecting) {
       statusText = state.error != null ? 'Still Connecting' : 'Connecting';
     } else {
@@ -89,64 +90,73 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Animated orb with ripples
-            AnimatedBuilder(
-              animation: _animationController,
-              builder: (context, child) {
-                return SizedBox(
-                  width: 300,
-                  height: 300,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Ripple effects (only when scanning or connecting)
-                      if (state.isScanning || state.isConnecting) ...[
-                        _buildRipple(0, state),
-                        _buildRipple(0.33, state),
-                        _buildRipple(0.66, state),
-                      ],
+            GestureDetector(
+              onTap: () {
+                // Only allow toggle if connected to Gemini
+                if (state.isGeminiConnected) {
+                  HapticFeedback.mediumImpact();
+                  ref.read(connectionViewModelProvider.notifier).toggleAudioStream();
+                }
+              },
+              child: AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return SizedBox(
+                    width: 300,
+                    height: 300,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Ripple effects (only when scanning or connecting)
+                        if (state.isScanning || state.isConnecting) ...[
+                          _buildRipple(0, state),
+                          _buildRipple(0.33, state),
+                          _buildRipple(0.66, state),
+                        ],
 
-                      // Main orb
-                      Transform.scale(
-                        scale: state.isScanning || state.isConnecting
-                            ? _pulseAnimation.value
-                            : 1.0,
-                        child: Container(
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                _getOrbColor(state).withValues(alpha: 0.8),
-                                _getOrbColor(state).withValues(alpha: 0.3),
-                                Colors.transparent,
-                              ],
-                              stops: const [0.3, 0.7, 1.0],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: _getOrbColor(state).withValues(alpha: 0.3),
-                                blurRadius: 60,
-                                spreadRadius: 20,
+                        // Main orb
+                        Transform.scale(
+                          scale: state.isScanning || state.isConnecting
+                              ? _pulseAnimation.value
+                              : 1.0,
+                          child: Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  _getOrbColor(state).withValues(alpha: 0.8),
+                                  _getOrbColor(state).withValues(alpha: 0.3),
+                                  Colors.transparent,
+                                ],
+                                stops: const [0.3, 0.7, 1.0],
                               ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _getOrbColor(state),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _getOrbColor(state).withValues(alpha: 0.3),
+                                  blurRadius: 60,
+                                  spreadRadius: 20,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _getOrbColor(state),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
 
             const SizedBox(height: 60),
@@ -251,12 +261,13 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
   Color _getOrbColor(ConnectionViewState state) {
     if (state.isSpeaking) {
       return Colors.deepPurpleAccent; // Speaking
+    } else if (state.isProcessing) {
+      return Colors.purpleAccent; // Processing
     } else if (state.isListening) {
       return Colors.lightBlueAccent; // Listening
+    } else if (state.isPaused) {
+      return Colors.grey; // Paused
     } else if (state.isConnected) {
-      if (state.isGeminiConnected && !state.isListening && !state.isSpeaking) {
-        return Colors.purpleAccent; // Processing
-      }
       return Colors.green; // Connected (Idle)
     } else if (state.isConnecting) {
       return Colors.orange;

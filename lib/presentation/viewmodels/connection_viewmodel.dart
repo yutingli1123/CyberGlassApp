@@ -26,6 +26,8 @@ class ConnectionViewState with _$ConnectionViewState {
     @Default(false) bool isGeminiStreaming,
     @Default(false) bool isListening, // User is speaking (microphone active)
     @Default(false) bool isSpeaking, // Gemini is speaking (audio playback)
+    @Default(false) bool isPaused, // Audio stream is paused by user
+    @Default(false) bool isProcessing, // Gemini is processing user input
     // Video stream state
     @Default(false) bool isVideoStreaming,
     @Default(0) int frameCount,
@@ -80,8 +82,22 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
     };
 
     _geminiLiveService.onSpeakingStateChanged = (isSpeaking) {
-      print('[GeminiLive] Speaking state changed: $isSpeaking');
-      state = state.copyWith(isSpeaking: isSpeaking);
+      print('[ConnectionViewModel] Speaking state changed: $isSpeaking');
+      print('[ConnectionViewModel] Current state before update - isSpeaking: ${state.isSpeaking}, isProcessing: ${state.isProcessing}, isListening: ${state.isListening}');
+      state = state.copyWith(
+        isSpeaking: isSpeaking,
+        // When Gemini starts speaking, exit processing state
+        isProcessing: isSpeaking ? false : state.isProcessing,
+      );
+      print('[ConnectionViewModel] State updated - isSpeaking: ${state.isSpeaking}, isProcessing: ${state.isProcessing}, isListening: ${state.isListening}');
+    };
+
+    _geminiLiveService.onUserStoppedSpeaking = () {
+      print('[GeminiLive] User stopped speaking - entering processing state');
+      // Only enter processing if not paused and not already speaking
+      if (!state.isPaused && !state.isSpeaking) {
+        state = state.copyWith(isProcessing: true);
+      }
     };
   }
 
@@ -131,6 +147,47 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       isGeminiStreaming: false,
       geminiStatus: 'Gemini disconnected',
     );
+  }
+
+  /// Toggle audio streaming on/off
+  Future<void> toggleAudioStream() async {
+    // Only allow toggle if Gemini is connected
+    if (!state.isGeminiConnected) {
+      print('[ConnectionViewModel] Cannot toggle audio - Gemini not connected');
+      return;
+    }
+
+    // Check if audio is currently active (in any state)
+    final isAudioActive = state.isListening || state.isGeminiStreaming;
+
+    if (isAudioActive && !state.isPaused) {
+      // Currently active (Listening/Processing/Speaking) - pause everything
+      print('[ConnectionViewModel] Pausing audio stream (from ${state.isListening ? "Listening" : state.isProcessing ? "Processing" : "Speaking"})...');
+
+      // Update UI immediately for instant feedback - clear all active states
+      state = state.copyWith(
+        isGeminiStreaming: false,
+        isPaused: true,
+        isProcessing: false,
+        geminiStatus: 'Audio paused - tap to resume',
+      );
+
+      // Then perform async operation
+      await _geminiLiveService.stopAudioStream();
+    } else {
+      // Currently paused - resume audio stream
+      print('[ConnectionViewModel] Resuming audio stream...');
+
+      // Update UI immediately for instant feedback
+      state = state.copyWith(
+        isGeminiStreaming: true,
+        isPaused: false,
+        geminiStatus: 'Listening - tap to pause',
+      );
+
+      // Then perform async operation
+      await _geminiLiveService.startAudioStream();
+    }
   }
 
   /// Send image to Gemini
