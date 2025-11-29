@@ -408,6 +408,12 @@ class GeminiLiveService {
       return;
     }
 
+    // Don't send images when paused
+    if (_isPaused) {
+      print('[GeminiLive] Image send skipped (paused)');
+      return;
+    }
+
     try {
       // Decode image
       final image = img.decodeImage(imageBytes);
@@ -473,17 +479,41 @@ class GeminiLiveService {
   }
 
   /// Pause audio streaming (keeps audio devices running, just stops sending data)
-  void pauseAudioStream() {
+  Future<void> pauseAudioStream() async {
     if (!_isPaused) {
       _isPaused = true;
 
-      // Clear any pending audio output
+      // Clear any pending audio output queue
       _audioOutQueue.clear();
+
+      // Clear player's internal buffer by stopping and restarting
+      try {
+        await _player.stop();
+        await _player.start();
+        print('[GeminiLive] Player buffer cleared');
+      } catch (e) {
+        print('[GeminiLive] Error clearing player buffer: $e');
+        // If restart fails, try to reinitialize
+        try {
+          await _player.initialize(
+            sampleRate: receiveSampleRate,
+            showLogs: false,
+          );
+          await _player.start();
+          print('[GeminiLive] Player reinitialized after pause');
+        } catch (e2) {
+          print('[GeminiLive] Error reinitializing player on pause: $e2');
+        }
+      }
 
       // Update states
       if (_isPlaying) {
         _isPlaying = false;
         onSpeakingStateChanged?.call(false);
+      }
+      if (_isListening) {
+        _isListening = false;
+        onListeningStateChanged?.call(false);
       }
 
       onStatusChanged?.call('Audio paused (devices still active)');
@@ -495,6 +525,13 @@ class GeminiLiveService {
   void resumeAudioStream() {
     if (_isPaused) {
       _isPaused = false;
+
+      // Restore listening state
+      if (!_isListening) {
+        _isListening = true;
+        onListeningStateChanged?.call(true);
+      }
+
       onStatusChanged?.call('Audio resumed');
       print('[GeminiLive] Audio resumed - now sending to WebSocket');
     }
