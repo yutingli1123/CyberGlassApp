@@ -35,6 +35,7 @@ class GeminiLiveService {
   bool _isListening = false; // User is currently speaking
   bool _turnComplete = false; // Track if turn is complete but audio still playing
   bool _shouldQuit = false;
+  bool _isPaused = false; // Pause flag - when true, don't send audio to WebSocket
 
   // Audio output queue (mimics Python's audio_in_queue)
   final List<Uint8List> _audioOutQueue = [];
@@ -160,6 +161,9 @@ class GeminiLiveService {
 
         if (_shouldQuit || !_isConnected) return;
 
+        // If paused, don't send audio to WebSocket but keep recording (for AEC)
+        if (_isPaused) return;
+
         // Detect user speaking activity for "latency mask"
         final audioData = Uint8List.fromList(data);
         _detectMicActivity(audioData);
@@ -236,6 +240,9 @@ class GeminiLiveService {
     _playbackTimer?.cancel();
     int chunkCount = 0;
     _playbackTimer = Timer.periodic(const Duration(milliseconds: 10), (_) {
+      // Don't play audio if paused
+      if (_isPaused) return;
+
       // Play audio whenever there's data in the queue
       if (_audioOutQueue.isNotEmpty) {
         final chunk = _audioOutQueue.removeAt(0);
@@ -322,6 +329,12 @@ class GeminiLiveService {
                 print('[GeminiLive] inlineData mimeType: $mimeType, hasData: ${dataStr != null}');
 
                 if (mimeType != null && mimeType.contains('audio') && dataStr != null) {
+                  // Don't queue audio if paused
+                  if (_isPaused) {
+                    print('[GeminiLive] Audio chunk dropped (paused)');
+                    continue;
+                  }
+
                   final audioBytes = base64Decode(dataStr);
                   _audioOutQueue.add(Uint8List.fromList(audioBytes));
 
@@ -459,8 +472,38 @@ class GeminiLiveService {
     _channel?.sink.add(jsonEncode(message));
   }
 
-  /// Stop audio streaming
+  /// Pause audio streaming (keeps audio devices running, just stops sending data)
+  void pauseAudioStream() {
+    if (!_isPaused) {
+      _isPaused = true;
+
+      // Clear any pending audio output
+      _audioOutQueue.clear();
+
+      // Update states
+      if (_isPlaying) {
+        _isPlaying = false;
+        onSpeakingStateChanged?.call(false);
+      }
+
+      onStatusChanged?.call('Audio paused (devices still active)');
+      print('[GeminiLive] Audio paused - mic and speaker still active for AEC');
+    }
+  }
+
+  /// Resume audio streaming
+  void resumeAudioStream() {
+    if (_isPaused) {
+      _isPaused = false;
+      onStatusChanged?.call('Audio resumed');
+      print('[GeminiLive] Audio resumed - now sending to WebSocket');
+    }
+  }
+
+  /// Stop audio streaming (completely stops audio devices)
   Future<void> stopAudioStream() async {
+    _isPaused = false;
+
     await _recorderSubscription?.cancel();
     _recorderSubscription = null;
 
