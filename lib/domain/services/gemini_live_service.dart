@@ -56,9 +56,9 @@ class GeminiLiveService {
 
   GeminiLiveService(
     this._apiKey, {
-    String? systemPrompt,
-  }) : _systemPrompt = (systemPrompt?.trim().isNotEmpty ?? false)
-            ? systemPrompt!.trim()
+    required String systemPrompt,
+  }) : _systemPrompt = systemPrompt.trim().isNotEmpty 
+            ? systemPrompt.trim()
             : _defaultSystemPrompt;
 
   /// Connect to Gemini Live API via WebSocket
