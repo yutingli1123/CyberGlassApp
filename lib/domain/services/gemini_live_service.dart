@@ -17,8 +17,6 @@ class GeminiLiveService {
   static const int receiveSampleRate = 24000;
   static const int channels = 1;
   static const String model = 'models/gemini-2.5-flash-native-audio-preview-12-2025';
-  static const String _defaultSystemPrompt =
-      'You are CyberGlass, a concise voice-first assistant. Keep replies short, avoid fillers, and prefer actionable guidance.';
 
   // WebSocket
   WebSocketChannel? _channel;
