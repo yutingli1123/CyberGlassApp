@@ -44,4 +44,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .claude
+.env
+gemini_live_simple_input_realtime_interrept.py
 .vscode

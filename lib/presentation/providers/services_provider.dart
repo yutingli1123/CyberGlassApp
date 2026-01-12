@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/constants/app_constants.dart';
 import '../../domain/services/bluetooth_service.dart';
 import '../../domain/services/storage_service.dart';
 import '../../domain/services/gemini_live_service.dart';
@@ -30,10 +31,19 @@ final geminiApiKeyProvider = Provider<String>((ref) {
   return apiKey;
 });
 
+/// Provider for Gemini system prompt
+/// Priority: 1. Environment variable (--dart-define=GEMINI_SYSTEM_PROMPT)
+///           2. AppConstants.defaultPrompt (fallback)
+final geminiSystemPromptProvider = Provider<String>((ref) {
+  const envPrompt = String.fromEnvironment('GEMINI_SYSTEM_PROMPT', defaultValue: '');
+  return envPrompt.isEmpty ? AppConstants.defaultPrompt : envPrompt;
+});
+
 /// Provider for GeminiLiveService singleton
 final geminiLiveServiceProvider = Provider<GeminiLiveService>((ref) {
   final apiKey = ref.watch(geminiApiKeyProvider);
-  final service = GeminiLiveService(apiKey);
+  final systemPrompt = ref.watch(geminiSystemPromptProvider);
+  final service = GeminiLiveService(apiKey, systemPrompt: systemPrompt);
 
   // Dispose when provider is destroyed
   ref.onDispose(() {
