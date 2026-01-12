@@ -16,7 +16,7 @@ class GeminiLiveService {
   static const int sendSampleRate = 16000;
   static const int receiveSampleRate = 24000;
   static const int channels = 1;
-  static const String model = 'models/gemini-2.0-flash-live-001';
+  static const String model = 'models/gemini-2.5-flash-native-audio-preview-12-2025';
   static const String _defaultSystemPrompt =
       'You are CyberGlass, a concise voice-first assistant. Keep replies short, avoid fillers, and prefer actionable guidance.';
 
@@ -63,9 +63,7 @@ class GeminiLiveService {
   GeminiLiveService(
     this._apiKey, {
     required String systemPrompt,
-  }) : _systemPrompt = systemPrompt.trim().isNotEmpty 
-            ? systemPrompt.trim()
-            : _defaultSystemPrompt;
+  }) : _systemPrompt = systemPrompt.trim();
 
   /// Connect to Gemini Live API via WebSocket
   Future<bool> connect() async {
