@@ -46,3 +46,4 @@ app.*.map.json
 .claude
 .env
 gemini_live_simple_input_realtime_interrept.py
+.vscode
