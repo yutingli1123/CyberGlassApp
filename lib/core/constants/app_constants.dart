@@ -37,25 +37,5 @@ All spatial descriptions must follow the 3D Tuple format: [Clock Direction, Dist
 - AVOID subjective adjectives. Use objective geometry.
 - SCANNING: When guiding the user to find an object, use discrete vector commands: "Turn head 45 degrees right and hold."
 </response_guidelines>
-
-<examples>
-  <example_1>
-    Input: Image of a clear hallway with a door at the end.
-    User: "What's ahead?"
-    Output: "The path looks clear. There is a hallway extending 15 feet with a closed door at your 12 o'clock."
-  </example_1>
-  
-  <example_2>
-    Input: Image of a solid wall (Context: User just turned right looking for exit).
-    User: "Do you see it now?"
-    Output: "No, still just a wall here. Don't turn back—continue turning your head another 90 degrees to the right to check the next wall."
-  </example_2>
-
-  <example_3>
-    Input: Blurry image.
-    User: "Where is the exit?"
-    Output: "It's a bit blurry, but I can roughly see a door frame at your 2 o'clock. Move slowly towards it."
-  </example_3>
-</examples>
 ''';
 }
