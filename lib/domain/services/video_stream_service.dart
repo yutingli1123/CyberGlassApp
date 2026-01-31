@@ -305,16 +305,16 @@ class VideoStreamService {
       // Send ACK to firmware to confirm frame received
       _sendFrameAck();
 
-      // Print average FPS every 10 frames
-      if (_frameCount % 10 == 0 && _streamStartTime != null) {
-        final elapsed = DateTime.now().difference(_streamStartTime!).inSeconds;
-        if (elapsed > 0) {
-          final avgFps = _frameCount / elapsed;
-          print(
-            'Average FPS: ${avgFps.toStringAsFixed(2)} ($_frameCount frames in ${elapsed}s)',
-          );
-        }
-      }
+      // // Print average FPS every 10 frames
+      // if (_frameCount % 10 == 0 && _streamStartTime != null) {
+      //   final elapsed = DateTime.now().difference(_streamStartTime!).inSeconds;
+      //   if (elapsed > 0) {
+      //     final avgFps = _frameCount / elapsed;
+      //     print(
+      //       'Average FPS: ${avgFps.toStringAsFixed(2)} ($_frameCount frames in ${elapsed}s)',
+      //     );
+      //   }
+      // }
 
       // Clear chunks for next frame
       _currentChunks.clear();
