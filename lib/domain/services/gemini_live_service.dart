@@ -62,7 +62,7 @@ class GeminiLiveService {
   // Proactive speaking mode - LLM will speak periodically without user input
   Timer? _proactiveTimer;
   bool _isProactiveMode = false;
-  Duration _proactiveInterval = const Duration(seconds: 8);
+  Duration _proactiveInterval = const Duration(seconds: 5);
   Function(bool)? onProactiveModeChanged;
 
   /// API Key - should be passed during initialization
@@ -511,7 +511,9 @@ class GeminiLiveService {
     }
 
     _isProactiveMode = true;
-    print('[GeminiLive] Starting proactive mode with interval: $_proactiveInterval');
+    print(
+      '[GeminiLive] Starting proactive mode with interval: $_proactiveInterval',
+    );
 
     // Trigger first analysis immediately
     _triggerProactiveAnalysis();
@@ -544,7 +546,9 @@ class GeminiLiveService {
   /// Trigger proactive analysis - send a prompt to make LLM speak
   void _triggerProactiveAnalysis() {
     if (!_isConnected || _isPaused) {
-      print('[GeminiLive] Cannot trigger proactive analysis - not connected or paused');
+      print(
+        '[GeminiLive] Cannot trigger proactive analysis - not connected or paused',
+      );
       return;
     }
 

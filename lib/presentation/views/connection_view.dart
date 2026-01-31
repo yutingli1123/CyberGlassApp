@@ -30,22 +30,23 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
     // Create smooth breathing animation (ease in and out)
     _pulseAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.95, end: 1.05)
-            .chain(CurveTween(curve: Curves.easeInOut)),
+        tween: Tween<double>(
+          begin: 0.95,
+          end: 1.05,
+        ).chain(CurveTween(curve: Curves.easeInOut)),
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.05, end: 0.95)
-            .chain(CurveTween(curve: Curves.easeInOut)),
+        tween: Tween<double>(
+          begin: 1.05,
+          end: 0.95,
+        ).chain(CurveTween(curve: Curves.easeInOut)),
         weight: 50,
       ),
     ]).animate(_animationController);
 
     _rippleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
     // Initialize: request permissions and start scanning
@@ -85,6 +86,32 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
 
     return Scaffold(
       backgroundColor: Colors.white,
+      floatingActionButton: state.isGeminiConnected
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                ref
+                    .read(connectionViewModelProvider.notifier)
+                    .toggleProactiveMode();
+              },
+              backgroundColor: state.isProactiveMode
+                  ? Colors.deepPurple
+                  : Colors.grey,
+              icon: Icon(
+                state.isProactiveMode
+                    ? Icons.auto_awesome
+                    : Icons.auto_awesome_outlined,
+                color: Colors.white,
+              ),
+              label: Text(
+                state.isProactiveMode ? 'Proactive ON' : 'Proactive OFF',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            )
+          : null,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -95,7 +122,9 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
                 // Only allow toggle if connected to Gemini
                 if (state.isGeminiConnected) {
                   HapticFeedback.mediumImpact();
-                  ref.read(connectionViewModelProvider.notifier).toggleAudioStream();
+                  ref
+                      .read(connectionViewModelProvider.notifier)
+                      .toggleAudioStream();
                 }
               },
               child: AnimatedBuilder(
@@ -134,7 +163,9 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: _getOrbColor(state).withValues(alpha: 0.3),
+                                  color: _getOrbColor(
+                                    state,
+                                  ).withValues(alpha: 0.3),
                                   blurRadius: 60,
                                   spreadRadius: 20,
                                 ),
@@ -209,12 +240,17 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
               // Button to connect new device
               ElevatedButton(
                 onPressed: () {
-                  ref.read(connectionViewModelProvider.notifier).scanForNewDevice();
+                  ref
+                      .read(connectionViewModelProvider.notifier)
+                      .scanForNewDevice();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
@@ -222,10 +258,7 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
                 ),
                 child: const Text(
                   'Connect New Device',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                 ),
               ),
             ],
