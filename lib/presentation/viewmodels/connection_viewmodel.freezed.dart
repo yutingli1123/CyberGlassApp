@@ -38,6 +38,7 @@ mixin _$ConnectionViewState {
   bool get isVideoStreaming => throw _privateConstructorUsedError;
   int get frameCount => throw _privateConstructorUsedError;
   double get currentFps => throw _privateConstructorUsedError;
+  Uint8List? get lastFrameData => throw _privateConstructorUsedError;
   String? get geminiStatus => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
   String? get statusMessage => throw _privateConstructorUsedError;
@@ -72,6 +73,7 @@ abstract class $ConnectionViewStateCopyWith<$Res> {
     bool isVideoStreaming,
     int frameCount,
     double currentFps,
+    Uint8List? lastFrameData,
     String? geminiStatus,
     String? error,
     String? statusMessage,
@@ -108,6 +110,7 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
     Object? isVideoStreaming = null,
     Object? frameCount = null,
     Object? currentFps = null,
+    Object? lastFrameData = freezed,
     Object? geminiStatus = freezed,
     Object? error = freezed,
     Object? statusMessage = freezed,
@@ -174,6 +177,10 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
                 ? _value.currentFps
                 : currentFps // ignore: cast_nullable_to_non_nullable
                       as double,
+            lastFrameData: freezed == lastFrameData
+                ? _value.lastFrameData
+                : lastFrameData // ignore: cast_nullable_to_non_nullable
+                      as Uint8List?,
             geminiStatus: freezed == geminiStatus
                 ? _value.geminiStatus
                 : geminiStatus // ignore: cast_nullable_to_non_nullable
@@ -217,6 +224,7 @@ abstract class _$$ConnectionViewStateImplCopyWith<$Res>
     bool isVideoStreaming,
     int frameCount,
     double currentFps,
+    Uint8List? lastFrameData,
     String? geminiStatus,
     String? error,
     String? statusMessage,
@@ -252,6 +260,7 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
     Object? isVideoStreaming = null,
     Object? frameCount = null,
     Object? currentFps = null,
+    Object? lastFrameData = freezed,
     Object? geminiStatus = freezed,
     Object? error = freezed,
     Object? statusMessage = freezed,
@@ -318,6 +327,10 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
             ? _value.currentFps
             : currentFps // ignore: cast_nullable_to_non_nullable
                   as double,
+        lastFrameData: freezed == lastFrameData
+            ? _value.lastFrameData
+            : lastFrameData // ignore: cast_nullable_to_non_nullable
+                  as Uint8List?,
         geminiStatus: freezed == geminiStatus
             ? _value.geminiStatus
             : geminiStatus // ignore: cast_nullable_to_non_nullable
@@ -354,6 +367,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     this.isVideoStreaming = false,
     this.frameCount = 0,
     this.currentFps = 0.0,
+    this.lastFrameData,
     this.geminiStatus,
     this.error,
     this.statusMessage,
@@ -417,6 +431,8 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
   @JsonKey()
   final double currentFps;
   @override
+  final Uint8List? lastFrameData;
+  @override
   final String? geminiStatus;
   @override
   final String? error;
@@ -425,7 +441,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
 
   @override
   String toString() {
-    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, isListening: $isListening, isSpeaking: $isSpeaking, isPaused: $isPaused, isProcessing: $isProcessing, isVideoStreaming: $isVideoStreaming, frameCount: $frameCount, currentFps: $currentFps, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
+    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, isListening: $isListening, isSpeaking: $isSpeaking, isPaused: $isPaused, isProcessing: $isProcessing, isVideoStreaming: $isVideoStreaming, frameCount: $frameCount, currentFps: $currentFps, lastFrameData: $lastFrameData, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
   }
 
   @override
@@ -465,6 +481,10 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
                 other.frameCount == frameCount) &&
             (identical(other.currentFps, currentFps) ||
                 other.currentFps == currentFps) &&
+            const DeepCollectionEquality().equals(
+              other.lastFrameData,
+              lastFrameData,
+            ) &&
             (identical(other.geminiStatus, geminiStatus) ||
                 other.geminiStatus == geminiStatus) &&
             (identical(other.error, error) || other.error == error) &&
@@ -473,7 +493,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     const DeepCollectionEquality().hash(_scannedDevices),
     isScanning,
@@ -490,10 +510,11 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     isVideoStreaming,
     frameCount,
     currentFps,
+    const DeepCollectionEquality().hash(lastFrameData),
     geminiStatus,
     error,
     statusMessage,
-  );
+  ]);
 
   /// Create a copy of ConnectionViewState
   /// with the given fields replaced by the non-null parameter values.
@@ -524,6 +545,7 @@ abstract class _ConnectionViewState implements ConnectionViewState {
     final bool isVideoStreaming,
     final int frameCount,
     final double currentFps,
+    final Uint8List? lastFrameData,
     final String? geminiStatus,
     final String? error,
     final String? statusMessage,
@@ -560,6 +582,8 @@ abstract class _ConnectionViewState implements ConnectionViewState {
   int get frameCount;
   @override
   double get currentFps;
+  @override
+  Uint8List? get lastFrameData;
   @override
   String? get geminiStatus;
   @override

@@ -58,6 +58,10 @@ class GeminiLiveService {
   bool _wasUserSpeaking = false;
   static const Duration silenceThreshold = Duration(milliseconds: 300);
 
+  // Latency tracking
+  DateTime? _userStoppedSpeakingTime;
+  DateTime? _lastAudioSentTime;
+
   /// API Key - should be passed during initialization
   late final String _apiKey;
   final String _systemPrompt;
@@ -182,6 +186,7 @@ class GeminiLiveService {
         };
 
         _channel?.sink.add(jsonEncode(message));
+        _lastAudioSentTime = DateTime.now(); // Track when audio was sent
       });
 
       // Start player for audio output
@@ -224,6 +229,23 @@ class GeminiLiveService {
       // User stopped speaking - start silence timer
       _silenceTimer = Timer(silenceThreshold, () {
         _wasUserSpeaking = false;
+
+        // Record time for latency measurement
+        _userStoppedSpeakingTime = DateTime.now();
+
+        // Calculate latency from last audio sent to user stopped speaking
+        if (_lastAudioSentTime != null) {
+          final sendLatency = _userStoppedSpeakingTime!.difference(
+            _lastAudioSentTime!,
+          );
+          print(
+            '[GeminiLive] 📤 Send latency (last audio sent → user stopped): ${sendLatency.inMilliseconds}ms',
+          );
+        }
+
+        print(
+          '[GeminiLive] User stopped speaking at ${_userStoppedSpeakingTime!.toIso8601String()}',
+        );
 
         // Notify that user stopped speaking (entering processing state)
         onUserStoppedSpeaking?.call();
@@ -350,10 +372,21 @@ class GeminiLiveService {
                   final audioBytes = base64Decode(dataStr);
                   _audioOutQueue.add(Uint8List.fromList(audioBytes));
 
-                  // Update speaking state
+                  // Update speaking state and calculate latency on first response
                   if (!_isPlaying) {
                     _isPlaying = true;
                     onSpeakingStateChanged?.call(true);
+
+                    // Calculate and print latency
+                    if (_userStoppedSpeakingTime != null) {
+                      final latency = DateTime.now().difference(
+                        _userStoppedSpeakingTime!,
+                      );
+                      print(
+                        '[GeminiLive] ⏱️  Latency (user stopped → first response): ${latency.inMilliseconds}ms',
+                      );
+                      _userStoppedSpeakingTime = null; // Reset for next turn
+                    }
                   }
 
                   print(

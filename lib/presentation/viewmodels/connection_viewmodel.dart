@@ -32,6 +32,7 @@ class ConnectionViewState with _$ConnectionViewState {
     @Default(false) bool isVideoStreaming,
     @Default(0) int frameCount,
     @Default(0.0) double currentFps,
+    Uint8List? lastFrameData,
     String? geminiStatus,
     String? error,
     String? statusMessage,
@@ -83,13 +84,17 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 
     _geminiLiveService.onSpeakingStateChanged = (isSpeaking) {
       print('[ConnectionViewModel] Speaking state changed: $isSpeaking');
-      print('[ConnectionViewModel] Current state before update - isSpeaking: ${state.isSpeaking}, isProcessing: ${state.isProcessing}, isListening: ${state.isListening}');
+      print(
+        '[ConnectionViewModel] Current state before update - isSpeaking: ${state.isSpeaking}, isProcessing: ${state.isProcessing}, isListening: ${state.isListening}',
+      );
       state = state.copyWith(
         isSpeaking: isSpeaking,
         // When Gemini starts speaking, exit processing state
         isProcessing: isSpeaking ? false : state.isProcessing,
       );
-      print('[ConnectionViewModel] State updated - isSpeaking: ${state.isSpeaking}, isProcessing: ${state.isProcessing}, isListening: ${state.isListening}');
+      print(
+        '[ConnectionViewModel] State updated - isSpeaking: ${state.isSpeaking}, isProcessing: ${state.isProcessing}, isListening: ${state.isListening}',
+      );
     };
 
     _geminiLiveService.onUserStoppedSpeaking = () {
@@ -159,7 +164,13 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 
     if (!state.isPaused) {
       // Currently active (Listening/Processing/Speaking) - pause
-      print('[ConnectionViewModel] Pausing audio stream (from ${state.isListening ? "Listening" : state.isProcessing ? "Processing" : "Speaking"})...');
+      print(
+        '[ConnectionViewModel] Pausing audio stream (from ${state.isListening
+            ? "Listening"
+            : state.isProcessing
+            ? "Processing"
+            : "Speaking"})...',
+      );
 
       // Update UI immediately for instant feedback - clear all active states
       state = state.copyWith(
@@ -195,7 +206,9 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 
   /// Start video streaming and forward frames to Gemini
   Future<void> _startVideoStreamWithGemini() async {
-    print('[ConnectionViewModel] Starting video stream with Gemini integration...');
+    print(
+      '[ConnectionViewModel] Starting video stream with Gemini integration...',
+    );
 
     try {
       // Start the video stream with optimized settings
@@ -214,12 +227,17 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       // Subscribe to video frames and forward to Gemini
       _videoFrameSubscription = frameStream.listen((frame) async {
         _framesSentToGemini++;
-        state = state.copyWith(frameCount: _framesSentToGemini);
+        state = state.copyWith(
+          frameCount: _framesSentToGemini,
+          lastFrameData: frame.jpegData,
+        );
 
         // Send frame to Gemini if connected
         if (_geminiLiveService.isConnected) {
           await _geminiLiveService.sendImage(frame.jpegData);
-          print('[ConnectionViewModel] Frame ${frame.frameNumber} sent to Gemini (${frame.sizeInBytes} bytes)');
+          print(
+            '[ConnectionViewModel] Frame ${frame.frameNumber} sent to Gemini (${frame.sizeInBytes} bytes)',
+          );
         }
       });
 
@@ -231,7 +249,9 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
         });
       }
 
-      print('[ConnectionViewModel] Video stream started with Gemini integration');
+      print(
+        '[ConnectionViewModel] Video stream started with Gemini integration',
+      );
     } catch (e) {
       print('[ConnectionViewModel] Failed to start video stream: $e');
       state = state.copyWith(
@@ -259,7 +279,9 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       statusMessage: 'Video stream stopped',
     );
 
-    print('[ConnectionViewModel] Video stream stopped. Total frames sent: $_framesSentToGemini');
+    print(
+      '[ConnectionViewModel] Video stream stopped. Total frames sent: $_framesSentToGemini',
+    );
   }
 
   /// Initialize: wait for Bluetooth and start scanning
@@ -282,7 +304,9 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 
   /// Try to reconnect to previously saved device
   Future<void> _tryReconnectSavedDevice(GlassDevice savedDevice) async {
-    print('[ConnectionViewModel] Found saved device: ${savedDevice.name} (${savedDevice.macAddress})');
+    print(
+      '[ConnectionViewModel] Found saved device: ${savedDevice.name} (${savedDevice.macAddress})',
+    );
     print('[ConnectionViewModel] Starting scan to find saved device...');
 
     state = state.copyWith(
@@ -295,7 +319,9 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       _scanSubscription?.cancel();
       _scanSubscription = _bluetoothService.scanForDevices().listen(
         (devices) {
-          print('[ConnectionViewModel] Found ${devices.length} CyberGlass devices');
+          print(
+            '[ConnectionViewModel] Found ${devices.length} CyberGlass devices',
+          );
 
           // Look for the saved device
           final targetDeviceIndex = devices.indexWhere(
@@ -321,9 +347,12 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       // If still scanning after 10 seconds, device not found - show error but keep scanning
       if (state.isScanning && !state.isConnecting && !state.isConnected) {
         state = state.copyWith(
-          error: 'Cannot find ${savedDevice.name}. The device may be turned off or out of range.',
+          error:
+              'Cannot find ${savedDevice.name}. The device may be turned off or out of range.',
         );
-        print('[ConnectionViewModel] Saved device not found after timeout, but continuing to scan...');
+        print(
+          '[ConnectionViewModel] Saved device not found after timeout, but continuing to scan...',
+        );
         // Keep scanning, don't stop
       }
     } catch (e) {
@@ -364,16 +393,12 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
         }
 
         if (adapterState == BluetoothAdapterState.off) {
-          state = state.copyWith(
-            error: 'Please turn on Bluetooth',
-          );
+          state = state.copyWith(error: 'Please turn on Bluetooth');
           return;
         }
 
         if (adapterState == BluetoothAdapterState.unauthorized) {
-          state = state.copyWith(
-            error: 'Bluetooth permission denied',
-          );
+          state = state.copyWith(error: 'Bluetooth permission denied');
           return;
         }
       } catch (e) {
@@ -384,7 +409,9 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       await Future.delayed(const Duration(milliseconds: 500));
     }
 
-    print('[ConnectionViewModel] Bluetooth state check timed out, attempting to scan anyway...');
+    print(
+      '[ConnectionViewModel] Bluetooth state check timed out, attempting to scan anyway...',
+    );
   }
 
   /// Start scanning and auto-connect to first CyberGlass device found
@@ -400,13 +427,17 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       _scanSubscription?.cancel();
       _scanSubscription = _bluetoothService.scanForDevices().listen(
         (devices) {
-          print('[ConnectionViewModel] Found ${devices.length} CyberGlass devices');
+          print(
+            '[ConnectionViewModel] Found ${devices.length} CyberGlass devices',
+          );
           state = state.copyWith(scannedDevices: devices);
 
           // Auto-connect to first device found
           if (devices.isNotEmpty && !state.isConnecting && !state.isConnected) {
             final firstDevice = devices.first.device;
-            print('[ConnectionViewModel] Auto-connecting to: ${firstDevice.platformName}');
+            print(
+              '[ConnectionViewModel] Auto-connecting to: ${firstDevice.platformName}',
+            );
             _autoConnectToDevice(firstDevice);
           }
         },
@@ -540,8 +571,12 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
 /// Provider for ConnectionViewModel
 final connectionViewModelProvider =
     StateNotifierProvider<ConnectionViewModel, ConnectionViewState>((ref) {
-  final bluetoothService = ref.watch(bluetoothServiceProvider);
-  final storageService = ref.watch(storageServiceProvider);
-  final geminiService = ref.watch(geminiLiveServiceProvider);
-  return ConnectionViewModel(bluetoothService, storageService, geminiService);
-});
+      final bluetoothService = ref.watch(bluetoothServiceProvider);
+      final storageService = ref.watch(storageServiceProvider);
+      final geminiService = ref.watch(geminiLiveServiceProvider);
+      return ConnectionViewModel(
+        bluetoothService,
+        storageService,
+        geminiService,
+      );
+    });
