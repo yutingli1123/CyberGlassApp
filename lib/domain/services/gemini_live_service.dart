@@ -52,6 +52,11 @@ class GeminiLiveService {
   Function(bool)? onSpeakingStateChanged; // Gemini is speaking
   Function()?
   onUserStoppedSpeaking; // User finished speaking, entering processing state
+  Function(bool, String?)? onFindModeChanged; // Find mode state changed
+
+  // Find mode state
+  bool _isFindMode = false;
+  String? _findTarget;
 
   // Silence detection for "latency mask"
   Timer? _silenceTimer;
@@ -366,6 +371,23 @@ class GeminiLiveService {
               if (partMap.containsKey('text')) {
                 final text = partMap['text'] as String;
                 onTextReceived?.call(text);
+
+                // Detect find mode markers
+                final findMatch = RegExp(r'\[FIND:(.+?)\]').firstMatch(text);
+                if (findMatch != null && !_isFindMode) {
+                  _isFindMode = true;
+                  _findTarget = findMatch.group(1);
+                  print('[GeminiLive] Find mode activated for: $_findTarget');
+                  onFindModeChanged?.call(true, _findTarget);
+                }
+
+                // Detect found marker
+                if (text.contains('[FOUND]') && _isFindMode) {
+                  print('[GeminiLive] Target found: $_findTarget');
+                  _isFindMode = false;
+                  onFindModeChanged?.call(false, _findTarget);
+                  _findTarget = null;
+                }
               }
             }
           }
