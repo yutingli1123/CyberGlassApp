@@ -62,7 +62,7 @@ class GeminiLiveService {
   // Proactive speaking mode - LLM will speak periodically without user input
   Timer? _proactiveTimer;
   bool _isProactiveMode = false;
-  Duration _proactiveInterval = const Duration(seconds: 10);
+  Duration _proactiveInterval = const Duration(seconds: 8);
   Function(bool)? onProactiveModeChanged;
 
   /// API Key - should be passed during initialization

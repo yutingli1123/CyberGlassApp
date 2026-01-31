@@ -45,5 +45,5 @@ Example format: "Chair at 2 o'clock, 4 feet, waist height."
 ''';
 
   // Proactive mode prompt - sent periodically to trigger LLM to speak
-  static const String proactivePrompt = '请简短描述当前场景中最重要的信息，如果有危险请优先提醒。';
+  static const String proactivePrompt = 'Briefly describe the most important information in the current scene. Prioritize warning about any dangers.';
 }
