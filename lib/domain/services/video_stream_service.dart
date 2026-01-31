@@ -57,6 +57,9 @@ class VideoStreamService {
   bool _frameAckSent = false;
   Timer? _timeoutCheckTimer;
 
+  // Mode: if true, drop incomplete frames instead of requesting retransmission
+  bool _dropIncompleteFrames = true;
+
   VideoStreamService(this._device);
 
   /// Stream of received video frames
@@ -302,6 +305,17 @@ class VideoStreamService {
       // Send ACK to firmware to confirm frame received
       _sendFrameAck();
 
+      // Print average FPS every 10 frames
+      if (_frameCount % 10 == 0 && _streamStartTime != null) {
+        final elapsed = DateTime.now().difference(_streamStartTime!).inSeconds;
+        if (elapsed > 0) {
+          final avgFps = _frameCount / elapsed;
+          print(
+            'Average FPS: ${avgFps.toStringAsFixed(2)} ($_frameCount frames in ${elapsed}s)',
+          );
+        }
+      }
+
       // Clear chunks for next frame
       _currentChunks.clear();
       _expectedChunks = 0;
@@ -348,8 +362,20 @@ class VideoStreamService {
       }
 
       if (missing.isNotEmpty) {
-        _lastChunkTime = now;
-        _sendNack(missing);
+        if (_dropIncompleteFrames) {
+          // Drop mode: Send ACK to tell firmware to move on, discard this frame
+          print(
+            'Frame $_currentFrameNumber incomplete (${_currentChunks.length}/$_expectedChunks), dropping and sending ACK',
+          );
+          _frameAckSent = true;
+          _sendFrameAck();
+          _currentChunks.clear();
+          _expectedChunks = 0;
+        } else {
+          // Retransmit mode: Request missing chunks via NACK
+          _lastChunkTime = now;
+          _sendNack(missing);
+        }
       }
     }
   }
@@ -509,6 +535,16 @@ class VideoStreamService {
   void _updateState(VideoStreamState newState) {
     _state = newState;
     _stateController.add(newState);
+  }
+
+  /// Set frame drop mode
+  /// If true: drop incomplete frames and send ACK
+  /// If false: request retransmission via NACK
+  void setDropIncompleteFrames(bool drop) {
+    _dropIncompleteFrames = drop;
+    print(
+      'Frame handling mode: ${drop ? "DROP incomplete frames" : "RETRANSMIT via NACK"}',
+    );
   }
 
   /// Clean up resources
