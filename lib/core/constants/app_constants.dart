@@ -43,4 +43,7 @@ Example format: "Chair at 2 o'clock, 4 feet, waist height."
 - If asked about something not visible in frame, say what IS visible and suggest camera adjustment
 </context_awareness>
 ''';
+
+  // Proactive mode prompt - sent periodically to trigger LLM to speak
+  static const String proactivePrompt = '请简短描述当前场景中最重要的信息，如果有危险请优先提醒。';
 }

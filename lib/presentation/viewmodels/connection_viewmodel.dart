@@ -28,6 +28,7 @@ class ConnectionViewState with _$ConnectionViewState {
     @Default(false) bool isSpeaking, // Gemini is speaking (audio playback)
     @Default(false) bool isPaused, // Audio stream is paused by user
     @Default(false) bool isProcessing, // Gemini is processing user input
+    @Default(false) bool isProactiveMode, // LLM speaks periodically without user input
     // Video stream state
     @Default(false) bool isVideoStreaming,
     @Default(0) int frameCount,
@@ -98,6 +99,11 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       if (!state.isPaused && !state.isSpeaking) {
         state = state.copyWith(isProcessing: true);
       }
+    };
+
+    _geminiLiveService.onProactiveModeChanged = (isProactive) {
+      print('[GeminiLive] Proactive mode changed: $isProactive');
+      state = state.copyWith(isProactiveMode: isProactive);
     };
   }
 
@@ -188,6 +194,28 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
   /// Send image to Gemini
   Future<void> sendImageToGemini(List<int> imageBytes) async {
     await _geminiLiveService.sendImage(Uint8List.fromList(imageBytes));
+  }
+
+  /// Toggle proactive speaking mode
+  /// When enabled, LLM will periodically analyze the scene and speak
+  void toggleProactiveMode({Duration? interval}) {
+    if (!state.isGeminiConnected) {
+      print('[ConnectionViewModel] Cannot toggle proactive mode - Gemini not connected');
+      return;
+    }
+
+    if (_geminiLiveService.isProactiveMode) {
+      print('[ConnectionViewModel] Stopping proactive mode...');
+      _geminiLiveService.stopProactiveMode();
+    } else {
+      print('[ConnectionViewModel] Starting proactive mode...');
+      _geminiLiveService.startProactiveMode(interval: interval);
+    }
+  }
+
+  /// Set proactive mode interval
+  void setProactiveInterval(Duration interval) {
+    _geminiLiveService.setProactiveInterval(interval);
   }
 
   /// Get the Gemini Live Service instance

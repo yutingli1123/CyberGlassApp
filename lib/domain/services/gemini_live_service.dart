@@ -7,6 +7,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:sound_stream/sound_stream.dart';
 import 'package:record/record.dart';
 import 'package:image/image.dart' as img;
+import '../../core/constants/app_constants.dart';
 
 /// GeminiLiveService - Dart port of Python Gemini Live API client
 ///
@@ -57,6 +58,12 @@ class GeminiLiveService {
   Timer? _silenceTimer;
   bool _wasUserSpeaking = false;
   static const Duration silenceThreshold = Duration(milliseconds: 300);
+
+  // Proactive speaking mode - LLM will speak periodically without user input
+  Timer? _proactiveTimer;
+  bool _isProactiveMode = false;
+  Duration _proactiveInterval = const Duration(seconds: 10);
+  Function(bool)? onProactiveModeChanged;
 
   /// API Key - should be passed during initialization
   late final String _apiKey;
@@ -491,6 +498,82 @@ class GeminiLiveService {
     _channel?.sink.add(jsonEncode(message));
   }
 
+  /// Start proactive speaking mode
+  /// LLM will periodically analyze the scene and speak without user input
+  void startProactiveMode({Duration? interval}) {
+    if (_isProactiveMode) {
+      print('[GeminiLive] Proactive mode already active');
+      return;
+    }
+
+    if (interval != null) {
+      _proactiveInterval = interval;
+    }
+
+    _isProactiveMode = true;
+    print('[GeminiLive] Starting proactive mode with interval: $_proactiveInterval');
+
+    // Trigger first analysis immediately
+    _triggerProactiveAnalysis();
+
+    // Start periodic timer
+    _proactiveTimer = Timer.periodic(_proactiveInterval, (_) {
+      _triggerProactiveAnalysis();
+    });
+
+    onProactiveModeChanged?.call(true);
+    onStatusChanged?.call('Proactive mode started');
+  }
+
+  /// Stop proactive speaking mode
+  void stopProactiveMode() {
+    if (!_isProactiveMode) {
+      print('[GeminiLive] Proactive mode not active');
+      return;
+    }
+
+    _isProactiveMode = false;
+    _proactiveTimer?.cancel();
+    _proactiveTimer = null;
+
+    print('[GeminiLive] Proactive mode stopped');
+    onProactiveModeChanged?.call(false);
+    onStatusChanged?.call('Proactive mode stopped');
+  }
+
+  /// Trigger proactive analysis - send a prompt to make LLM speak
+  void _triggerProactiveAnalysis() {
+    if (!_isConnected || _isPaused) {
+      print('[GeminiLive] Cannot trigger proactive analysis - not connected or paused');
+      return;
+    }
+
+    // Don't trigger if already speaking or processing
+    if (_isPlaying) {
+      print('[GeminiLive] Skipping proactive analysis - already speaking');
+      return;
+    }
+
+    print('[GeminiLive] Triggering proactive analysis...');
+
+    // Send a prompt to make the LLM analyze and speak
+    sendText(AppConstants.proactivePrompt);
+  }
+
+  /// Check if proactive mode is active
+  bool get isProactiveMode => _isProactiveMode;
+
+  /// Update proactive interval
+  void setProactiveInterval(Duration interval) {
+    _proactiveInterval = interval;
+
+    // If already running, restart with new interval
+    if (_isProactiveMode) {
+      stopProactiveMode();
+      startProactiveMode();
+    }
+  }
+
   /// Pause audio streaming (keeps audio devices running, just stops sending data)
   Future<void> pauseAudioStream() async {
     if (!_isPaused) {
@@ -587,6 +670,9 @@ class GeminiLiveService {
   Future<void> disconnect() async {
     _shouldQuit = true;
     _isConnected = false;
+
+    // Stop proactive mode if active
+    stopProactiveMode();
 
     await stopAudioStream();
 
