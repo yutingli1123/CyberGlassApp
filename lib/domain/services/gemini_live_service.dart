@@ -58,6 +58,9 @@ class GeminiLiveService {
   bool _isFindMode = false;
   String? _findTarget;
 
+  // AEC Grace period
+  DateTime? _ignoreMicUntil;
+
   // Silence detection for "latency mask"
   Timer? _silenceTimer;
   bool _wasUserSpeaking = false;
@@ -170,6 +173,12 @@ class GeminiLiveService {
 
         // If paused, don't send audio to WebSocket but keep recording (for AEC)
         if (_isPaused) return;
+
+        // Check grace period to prevent self-interruption
+        if (_ignoreMicUntil != null &&
+            DateTime.now().isBefore(_ignoreMicUntil!)) {
+          return;
+        }
 
         // Detect user speaking activity for "latency mask"
         final audioData = Uint8List.fromList(data);
@@ -359,6 +368,14 @@ class GeminiLiveService {
                   if (!_isPlaying) {
                     _isPlaying = true;
                     onSpeakingStateChanged?.call(true);
+
+                    // Ignore mic for a short period to prevent self-interruption (AEC convergence)
+                    _ignoreMicUntil = DateTime.now().add(
+                      const Duration(milliseconds: 1000),
+                    );
+                    print(
+                      '[GeminiLive] Starting playback - ignoring mic for 1000ms',
+                    );
                   }
 
                   print(
