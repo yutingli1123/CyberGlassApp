@@ -84,11 +84,6 @@ class BleConstants {
   static const int defaultResolution = resolutionVGA;
   static const int defaultQuality =
       15; // 10-63, lower = better quality (recommended: 15)
-  static const int defaultFps =
-      2; // 1-10, target frame rate (recommended: 2 for VGA)
   static const int defaultChunkDelay =
       80; // 0-255ms, delay between chunk batches (recommended: 80)
-
-  // Maximum FPS limit (limited by 100ms minimum frame interval)
-  static const int maxFps = 10;
 }
