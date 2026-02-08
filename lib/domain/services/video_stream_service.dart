@@ -425,7 +425,6 @@ class VideoStreamService {
   Future<void> startStream({
     int resolution = BleConstants.defaultResolution,
     int quality = BleConstants.defaultQuality,
-    int fps = BleConstants.defaultFps,
     int? chunkDelay = BleConstants.defaultChunkDelay,
   }) async {
     if (_imageControlChar == null) {
@@ -438,7 +437,6 @@ class VideoStreamService {
     }
 
     // Validate parameters
-    final clampedFps = fps.clamp(1, BleConstants.maxFps);
     final clampedQuality = quality.clamp(10, 63);
     final clampedResolution = resolution.clamp(0, 7);
 
@@ -448,15 +446,14 @@ class VideoStreamService {
       // Subscribe to notifications first
       await _subscribeToNotifications();
 
-      // Send start command: [3, resolution, quality, fps] or [3, resolution, quality, fps, chunk_delay]
+      // Send start command: [3, resolution, quality] or [3, resolution, quality, chunk_delay]
       final List<int> commandList = [
         BleConstants.cmdStartVideoStream,
         clampedResolution,
         clampedQuality,
-        clampedFps,
       ];
 
-      // Add optional chunk delay (5th byte)
+      // Add optional chunk delay (4th byte)
       if (chunkDelay != null) {
         commandList.add(chunkDelay.clamp(0, 255));
       }
@@ -465,7 +462,7 @@ class VideoStreamService {
 
       await _imageControlChar!.write(command, withoutResponse: false);
       print(
-        'Start stream command sent: resolution=$clampedResolution, quality=$clampedQuality, fps=$clampedFps${chunkDelay != null ? ', chunkDelay=$chunkDelay' : ''}',
+        'Start stream command sent: resolution=$clampedResolution, quality=$clampedQuality${chunkDelay != null ? ', chunkDelay=$chunkDelay' : ''}',
       );
     } catch (e) {
       _updateState(VideoStreamState.error);
