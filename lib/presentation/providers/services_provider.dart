@@ -3,6 +3,7 @@ import '../../core/constants/app_constants.dart';
 import '../../domain/services/bluetooth_service.dart';
 import '../../domain/services/storage_service.dart';
 import '../../domain/services/gemini_live_service.dart';
+import '../services/haptic_feedback_service.dart';
 
 /// Provider for BleService singleton
 final bluetoothServiceProvider = Provider<BleService>((ref) {
@@ -51,4 +52,9 @@ final geminiLiveServiceProvider = Provider<GeminiLiveService>((ref) {
   });
 
   return service;
+});
+
+/// Provider for app-wide haptic feedback service
+final hapticFeedbackServiceProvider = Provider<HapticFeedbackService>((ref) {
+  return HapticFeedbackService();
 });

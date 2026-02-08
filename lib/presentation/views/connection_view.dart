@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/interaction_feedback_provider.dart';
+import '../providers/services_provider.dart';
 import '../viewmodels/connection_viewmodel.dart';
 
 /// Connection screen with animated orb
@@ -16,6 +20,7 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
   late Animation<double> _rippleAnimation;
+  ProviderSubscription<InteractionPhase?>? _interactionSubscription;
 
   @override
   void initState() {
@@ -48,6 +53,17 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
       ),
     );
 
+    _interactionSubscription = ref.listenManual<InteractionPhase?>(
+      interactionFeedbackProvider,
+      (previous, next) {
+        if (next == null || next == previous) {
+          return;
+        }
+        final haptics = ref.read(hapticFeedbackServiceProvider);
+        unawaited(haptics.emit(next));
+      },
+    );
+
     // Initialize: request permissions and start scanning
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(connectionViewModelProvider.notifier).initialize();
@@ -56,6 +72,7 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
 
   @override
   void dispose() {
+    _interactionSubscription?.close();
     _animationController.dispose();
     super.dispose();
   }

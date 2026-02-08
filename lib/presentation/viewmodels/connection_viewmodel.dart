@@ -289,6 +289,7 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       isScanning: true,
       statusMessage: 'Looking for ${savedDevice.name}...',
     );
+    print('[ConnectionViewModel] Scanning state -> true (saved device search)');
 
     try {
       // Start scanning
@@ -395,6 +396,7 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       error: null,
       statusMessage: 'Scanning for devices...',
     );
+    print('[ConnectionViewModel] Scanning state -> true (auto connect)');
 
     try {
       _scanSubscription?.cancel();
@@ -418,6 +420,7 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
         onDone: () {
           print('[ConnectionViewModel] Scan completed');
           state = state.copyWith(isScanning: false);
+          print('[ConnectionViewModel] Scanning state -> false (scan completed)');
         },
       );
     } catch (e) {
@@ -505,6 +508,7 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
     await _scanSubscription?.cancel();
     await _bluetoothService.stopScan();
     state = state.copyWith(isScanning: false);
+    print('[ConnectionViewModel] Scanning state -> false (stopScanning called)');
   }
 
   /// Connect to a specific device
