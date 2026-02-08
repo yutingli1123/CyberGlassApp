@@ -57,6 +57,8 @@ class GeminiLiveService {
   // Find mode state
   bool _isFindMode = false;
   String? _findTarget;
+  Timer? _findModeQueryTimer;
+  String? _latestFrameBase64; // Cached latest frame for find mode queries
 
   // Silence detection for "latency mask"
   Timer? _silenceTimer;
@@ -379,11 +381,13 @@ class GeminiLiveService {
                   _findTarget = findMatch.group(1);
                   print('[GeminiLive] Find mode activated for: $_findTarget');
                   onFindModeChanged?.call(true, _findTarget);
+                  _startFindModeQueries();
                 }
 
                 // Detect found marker
                 if (text.contains('[FOUND]') && _isFindMode) {
                   print('[GeminiLive] Target found: $_findTarget');
+                  _stopFindModeQueries();
                   _isFindMode = false;
                   onFindModeChanged?.call(false, _findTarget);
                   _findTarget = null;
@@ -396,6 +400,39 @@ class GeminiLiveService {
     } catch (e) {
       onStatusChanged?.call('Message parse error: $e');
     }
+  }
+
+  /// Start periodic queries during find mode to force Gemini to analyze frames
+  void _startFindModeQueries() {
+    _findModeQueryTimer?.cancel();
+    print('[GeminiLive] Starting find mode queries for: $_findTarget');
+    _findModeQueryTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_isFindMode && _isConnected && !_isPaused && _latestFrameBase64 != null) {
+        final message = {
+          'clientContent': {
+            'turns': [
+              {
+                'role': 'user',
+                'parts': [
+                  {'inlineData': {'mimeType': 'image/jpeg', 'data': _latestFrameBase64}},
+                  {'text': 'Is $_findTarget in this image? If NO: output nothing. If YES: announce location and include [FOUND].'},
+                ],
+              },
+            ],
+            'turnComplete': true,
+          },
+        };
+        _channel?.sink.add(jsonEncode(message));
+        print('[GeminiLive] Find mode query sent with latest frame for: $_findTarget');
+      }
+    });
+  }
+
+  /// Stop find mode periodic queries
+  void _stopFindModeQueries() {
+    _findModeQueryTimer?.cancel();
+    _findModeQueryTimer = null;
+    print('[GeminiLive] Find mode queries stopped');
   }
 
   /// Handle interruption - clear audio queue immediately
@@ -477,6 +514,10 @@ class GeminiLiveService {
 
       // Send via WebSocket
       final base64Image = base64Encode(jpegBytes);
+
+      // Cache latest frame for find mode queries
+      _latestFrameBase64 = base64Image;
+
       final message = {
         'realtimeInput': {
           'mediaChunks': [
@@ -609,6 +650,11 @@ class GeminiLiveService {
   Future<void> disconnect() async {
     _shouldQuit = true;
     _isConnected = false;
+
+    _stopFindModeQueries();
+    _isFindMode = false;
+    _findTarget = null;
+    _latestFrameBase64 = null;
 
     await stopAudioStream();
 
