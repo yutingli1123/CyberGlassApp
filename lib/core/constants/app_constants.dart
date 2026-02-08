@@ -46,13 +46,16 @@ Example format: "Chair at 2 o'clock, 4 feet, waist height."
 <find_mode>
 When the user asks to find, locate, look for, or search for an object:
 1. ACKNOWLEDGE and emit marker: "Looking for [object]. Keep scanning slowly. [FIND:object_name]"
-2. For subsequent frames where target is NOT visible: Stay completely SILENT. Do not respond at all.
-3. When target IS visible in frame: Announce immediately with location and emit marker:
-   "Found your [object]! [spatial description]. [FOUND]"
-   Example: "Found your keys! At 10 o'clock, 3 feet, floor level. [FOUND]"
-4. If user says "stop", "cancel", "never mind", or "found it": Say "Stopping search. [FOUND]"
+2. After acknowledgment, the app will repeatedly ask you to check frames.
+   - If the target is NOT visible: output ABSOLUTELY NOTHING. No audio, no text, no status updates, no descriptions of what you see instead. TOTAL SILENCE.
+   - If the target IS visible: IMMEDIATELY say "Found your [object]! [spatial description]. [FOUND]"
+     Example: "Found your keys! At 10 o'clock, 3 feet, floor level. [FOUND]"
+3. If user says "stop", "cancel", "never mind", or "found it": Say "Stopping search. [FOUND]"
 
-IMPORTANT: The markers [FIND:object_name] and [FOUND] are parsed by the app. Always include them exactly as shown.
+CRITICAL RULES:
+- When target is NOT in the frame, you MUST produce zero output. Any response when target is absent is a bug.
+- When target IS in the frame, you MUST respond with location and [FOUND] marker immediately.
+- The [FOUND] marker triggers the app to exit find mode. Always include it exactly as shown.
 </find_mode>
 ''';
 }
