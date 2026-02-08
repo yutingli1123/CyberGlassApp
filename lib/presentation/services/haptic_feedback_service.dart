@@ -69,15 +69,17 @@ class HapticFeedbackService {
   void _startScanningPulse() {
     _log('scanning timer start');
     _scanningTimer ??= Timer.periodic(
-      const Duration(milliseconds: 400),
-      (_) => HapticFeedback.heavyImpact(),
+      const Duration(milliseconds: 800),
+      (_) {
+        _log('scanning tick');
+        HapticFeedback.vibrate();
+      },
     );
   }
 
   Future<void> _kickScanningPattern() async {
-    await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 120));
-    await HapticFeedback.heavyImpact();
+    _log('scanning kick');
+    await HapticFeedback.vibrate();
   }
 
   void _startDeviceNotFoundPulse() {
@@ -104,6 +106,13 @@ class HapticFeedbackService {
     await HapticFeedback.heavyImpact();
     await Future.delayed(const Duration(milliseconds: 150));
     await HapticFeedback.heavyImpact();
+  }
+
+  /// Stop any running persistent vibration pattern and reset state.
+  void stop() {
+    _log('stop');
+    _stopPersistentPattern(_lastPhase);
+    _lastPhase = null;
   }
 
   void _ensurePersistentPattern(InteractionPhase phase) {

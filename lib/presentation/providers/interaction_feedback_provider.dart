@@ -11,18 +11,22 @@ enum InteractionPhase {
   deviceNotFound,
 }
 
-/// Derives the primary interaction phase from [ConnectionViewState].
-final interactionFeedbackProvider = Provider<InteractionPhase?>((ref) {
-  final state = ref.watch(connectionViewModelProvider);
-
+/// Compute the interaction phase from a [ConnectionViewState].
+InteractionPhase? computeInteractionPhase(ConnectionViewState state) {
   if (_isDeviceNotFound(state)) return InteractionPhase.deviceNotFound;
+  if (state.isSpeaking) return null;
   if (state.isPaused) return InteractionPhase.paused;
   if (state.isProcessing) return InteractionPhase.processing;
   if (state.isListening) return InteractionPhase.listening;
   if (state.isConnected) return InteractionPhase.connected;
   if (state.isScanning) return InteractionPhase.scanning;
-
   return null;
+}
+
+/// Derives the primary interaction phase from [ConnectionViewState].
+final interactionFeedbackProvider = Provider<InteractionPhase?>((ref) {
+  final state = ref.watch(connectionViewModelProvider);
+  return computeInteractionPhase(state);
 });
 
 bool _isDeviceNotFound(ConnectionViewState state) {

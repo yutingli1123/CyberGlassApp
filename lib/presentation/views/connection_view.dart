@@ -20,7 +20,7 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
   late Animation<double> _rippleAnimation;
-  ProviderSubscription<InteractionPhase?>? _interactionSubscription;
+  InteractionPhase? _lastHapticPhase;
 
   @override
   void initState() {
@@ -53,17 +53,6 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
       ),
     );
 
-    _interactionSubscription = ref.listenManual<InteractionPhase?>(
-      interactionFeedbackProvider,
-      (previous, next) {
-        if (next == null || next == previous) {
-          return;
-        }
-        final haptics = ref.read(hapticFeedbackServiceProvider);
-        unawaited(haptics.emit(next));
-      },
-    );
-
     // Initialize: request permissions and start scanning
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(connectionViewModelProvider.notifier).initialize();
@@ -72,7 +61,7 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
 
   @override
   void dispose() {
-    _interactionSubscription?.close();
+    ref.read(hapticFeedbackServiceProvider).stop();
     _animationController.dispose();
     super.dispose();
   }
@@ -80,6 +69,23 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(connectionViewModelProvider);
+
+    // Trigger haptics when interaction phase changes.
+    final newPhase = computeInteractionPhase(state);
+    if (newPhase != _lastHapticPhase) {
+      final oldPhase = _lastHapticPhase;
+      _lastHapticPhase = newPhase;
+      debugPrint('[HapticsView] phase change: $oldPhase -> $newPhase');
+      // Schedule after frame to avoid side-effects during build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final haptics = ref.read(hapticFeedbackServiceProvider);
+        if (newPhase == null) {
+          haptics.stop();
+        } else {
+          unawaited(haptics.emit(newPhase));
+        }
+      });
+    }
 
     // Determine status text
     String statusText;
