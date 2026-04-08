@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:image/image.dart' as img;
 import '../../core/constants/ble_constants.dart';
 
 /// Represents a single video frame received from the device
@@ -279,10 +280,18 @@ class VideoStreamService {
         offset += chunk.length;
       }
 
+      // Rotate frame 90 degrees counterclockwise
+      Uint8List rotatedData = frameData;
+      final decoded = img.decodeJpg(frameData);
+      if (decoded != null) {
+        final rotated = img.copyRotate(decoded, angle: 270);
+        rotatedData = Uint8List.fromList(img.encodeJpg(rotated));
+      }
+
       // Create and emit frame
       final frame = VideoFrame(
         frameNumber: _currentFrameNumber,
-        jpegData: frameData,
+        jpegData: rotatedData,
       );
 
       _frameController.add(frame);

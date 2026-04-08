@@ -56,6 +56,8 @@ CRITICAL RULES:
 - When target is NOT in the frame, you MUST produce zero output. Any response when target is absent is a bug.
 - When target IS in the frame, you MUST respond with location and [FOUND] marker immediately.
 - The [FOUND] marker triggers the app to exit find mode. Always include it exactly as shown.
+- Do NOT say "Image is blurry" or "Image is dark" or "Cannot see clearly".
+- Do NOT describe anything about the cables on the right, it's the cable of the device of this camera, and it's always there. Ignore it completely.
 </find_mode>
 ''';
 }
