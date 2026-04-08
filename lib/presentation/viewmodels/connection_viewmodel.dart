@@ -35,6 +35,7 @@ class ConnectionViewState with _$ConnectionViewState {
     @Default(false) bool isVideoStreaming,
     @Default(0) int frameCount,
     @Default(0.0) double currentFps,
+    Uint8List? currentFrame,
     String? geminiStatus,
     String? error,
     String? statusMessage,
@@ -225,7 +226,10 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       // Subscribe to video frames and forward to Gemini
       _videoFrameSubscription = frameStream.listen((frame) async {
         _framesSentToGemini++;
-        state = state.copyWith(frameCount: _framesSentToGemini);
+        state = state.copyWith(
+          frameCount: _framesSentToGemini,
+          currentFrame: frame.jpegData,
+        );
 
         // Send frame to Gemini if connected
         if (_geminiLiveService.isConnected) {
@@ -267,6 +271,7 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
     state = state.copyWith(
       isVideoStreaming: false,
       currentFps: 0.0,
+      currentFrame: null,
       statusMessage: 'Video stream stopped',
     );
 

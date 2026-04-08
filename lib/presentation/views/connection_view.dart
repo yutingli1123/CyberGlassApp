@@ -172,7 +172,29 @@ class _ConnectionViewState extends ConsumerState<ConnectionView>
               ),
             ),
 
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
+
+            // Video frame preview (shown when streaming)
+            if (state.currentFrame != null)
+              Container(
+                width: 240,
+                height: 180,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: _getOrbColor(state).withValues(alpha: 0.5),
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.memory(
+                  state.currentFrame!,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                ),
+              ),
+
+            if (state.currentFrame != null) const SizedBox(height: 16),
 
             // Error message box (shown when there's an error)
             if (state.error != null) ...[

@@ -43,6 +43,7 @@ mixin _$ConnectionViewState {
   bool get isVideoStreaming => throw _privateConstructorUsedError;
   int get frameCount => throw _privateConstructorUsedError;
   double get currentFps => throw _privateConstructorUsedError;
+  Uint8List? get currentFrame => throw _privateConstructorUsedError;
   String? get geminiStatus => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
   String? get statusMessage => throw _privateConstructorUsedError;
@@ -79,6 +80,7 @@ abstract class $ConnectionViewStateCopyWith<$Res> {
     bool isVideoStreaming,
     int frameCount,
     double currentFps,
+    Uint8List? currentFrame,
     String? geminiStatus,
     String? error,
     String? statusMessage,
@@ -117,6 +119,7 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
     Object? isVideoStreaming = null,
     Object? frameCount = null,
     Object? currentFps = null,
+    Object? currentFrame = freezed,
     Object? geminiStatus = freezed,
     Object? error = freezed,
     Object? statusMessage = freezed,
@@ -191,6 +194,10 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
                 ? _value.currentFps
                 : currentFps // ignore: cast_nullable_to_non_nullable
                       as double,
+            currentFrame: freezed == currentFrame
+                ? _value.currentFrame
+                : currentFrame // ignore: cast_nullable_to_non_nullable
+                      as Uint8List?,
             geminiStatus: freezed == geminiStatus
                 ? _value.geminiStatus
                 : geminiStatus // ignore: cast_nullable_to_non_nullable
@@ -236,6 +243,7 @@ abstract class _$$ConnectionViewStateImplCopyWith<$Res>
     bool isVideoStreaming,
     int frameCount,
     double currentFps,
+    Uint8List? currentFrame,
     String? geminiStatus,
     String? error,
     String? statusMessage,
@@ -273,6 +281,7 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
     Object? isVideoStreaming = null,
     Object? frameCount = null,
     Object? currentFps = null,
+    Object? currentFrame = freezed,
     Object? geminiStatus = freezed,
     Object? error = freezed,
     Object? statusMessage = freezed,
@@ -347,6 +356,10 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
             ? _value.currentFps
             : currentFps // ignore: cast_nullable_to_non_nullable
                   as double,
+        currentFrame: freezed == currentFrame
+            ? _value.currentFrame
+            : currentFrame // ignore: cast_nullable_to_non_nullable
+                  as Uint8List?,
         geminiStatus: freezed == geminiStatus
             ? _value.geminiStatus
             : geminiStatus // ignore: cast_nullable_to_non_nullable
@@ -385,6 +398,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     this.isVideoStreaming = false,
     this.frameCount = 0,
     this.currentFps = 0.0,
+    this.currentFrame,
     this.geminiStatus,
     this.error,
     this.statusMessage,
@@ -456,6 +470,8 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
   @JsonKey()
   final double currentFps;
   @override
+  final Uint8List? currentFrame;
+  @override
   final String? geminiStatus;
   @override
   final String? error;
@@ -464,7 +480,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
 
   @override
   String toString() {
-    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, isListening: $isListening, isSpeaking: $isSpeaking, isPaused: $isPaused, isProcessing: $isProcessing, isFindMode: $isFindMode, findTarget: $findTarget, isVideoStreaming: $isVideoStreaming, frameCount: $frameCount, currentFps: $currentFps, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
+    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, isListening: $isListening, isSpeaking: $isSpeaking, isPaused: $isPaused, isProcessing: $isProcessing, isFindMode: $isFindMode, findTarget: $findTarget, isVideoStreaming: $isVideoStreaming, frameCount: $frameCount, currentFps: $currentFps, currentFrame: $currentFrame, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
   }
 
   @override
@@ -508,6 +524,10 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
                 other.frameCount == frameCount) &&
             (identical(other.currentFps, currentFps) ||
                 other.currentFps == currentFps) &&
+            const DeepCollectionEquality().equals(
+              other.currentFrame,
+              currentFrame,
+            ) &&
             (identical(other.geminiStatus, geminiStatus) ||
                 other.geminiStatus == geminiStatus) &&
             (identical(other.error, error) || other.error == error) &&
@@ -535,6 +555,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     isVideoStreaming,
     frameCount,
     currentFps,
+    const DeepCollectionEquality().hash(currentFrame),
     geminiStatus,
     error,
     statusMessage,
@@ -571,6 +592,7 @@ abstract class _ConnectionViewState implements ConnectionViewState {
     final bool isVideoStreaming,
     final int frameCount,
     final double currentFps,
+    final Uint8List? currentFrame,
     final String? geminiStatus,
     final String? error,
     final String? statusMessage,
@@ -612,6 +634,8 @@ abstract class _ConnectionViewState implements ConnectionViewState {
   int get frameCount;
   @override
   double get currentFps;
+  @override
+  Uint8List? get currentFrame;
   @override
   String? get geminiStatus;
   @override
