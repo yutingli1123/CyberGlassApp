@@ -16,7 +16,8 @@ class GeminiLiveService {
   static const int sendSampleRate = 16000;
   static const int receiveSampleRate = 24000;
   static const int channels = 1;
-  static const String model = 'models/gemini-2.5-flash-native-audio-preview-12-2025';
+  static const String model =
+      'models/gemini-2.5-flash-native-audio-preview-12-2025';
 
   // WebSocket
   WebSocketChannel? _channel;
@@ -31,9 +32,11 @@ class GeminiLiveService {
   bool _isConnected = false;
   bool _isPlaying = false;
   bool _isListening = false; // User is currently speaking
-  bool _turnComplete = false; // Track if turn is complete but audio still playing
+  bool _turnComplete =
+      false; // Track if turn is complete but audio still playing
   bool _shouldQuit = false;
-  bool _isPaused = false; // Pause flag - when true, don't send audio to WebSocket
+  bool _isPaused =
+      false; // Pause flag - when true, don't send audio to WebSocket
 
   // Audio output queue (mimics Python's audio_in_queue)
   final List<Uint8List> _audioOutQueue = [];
@@ -47,7 +50,15 @@ class GeminiLiveService {
   Function()? onMicActivityStopped; // For "latency mask" haptic feedback
   Function(bool)? onListeningStateChanged; // User is speaking
   Function(bool)? onSpeakingStateChanged; // Gemini is speaking
-  Function()? onUserStoppedSpeaking; // User finished speaking, entering processing state
+  Function()?
+  onUserStoppedSpeaking; // User finished speaking, entering processing state
+  Function(bool, String?)? onFindModeChanged; // Find mode state changed
+
+  // Find mode state
+  bool _isFindMode = false;
+  String? _findTarget;
+  Timer? _findModeQueryTimer;
+  String? _latestFrameBase64; // Cached latest frame for find mode queries
 
   // Silence detection for "latency mask"
   Timer? _silenceTimer;
@@ -58,10 +69,8 @@ class GeminiLiveService {
   late final String _apiKey;
   final String _systemPrompt;
 
-  GeminiLiveService(
-    this._apiKey, {
-    required String systemPrompt,
-  }) : _systemPrompt = systemPrompt.trim();
+  GeminiLiveService(this._apiKey, {required String systemPrompt})
+    : _systemPrompt = systemPrompt.trim();
 
   /// Connect to Gemini Live API via WebSocket
   Future<bool> connect() async {
@@ -95,6 +104,7 @@ class GeminiLiveService {
         'generationConfig': {
           'responseModalities': ['AUDIO'],
         },
+        'proactivity': {'proactive_audio': true},
       };
 
       _channel!.sink.add(jsonEncode({'setup': setup}));
@@ -136,10 +146,7 @@ class GeminiLiveService {
       }
 
       // Initialize player with 24kHz sample rate for Gemini output
-      await _player.initialize(
-        sampleRate: receiveSampleRate,
-        showLogs: false,
-      );
+      await _player.initialize(sampleRate: receiveSampleRate, showLogs: false);
 
       // Start recording with echo cancellation
       final audioStream = await _recorder.startStream(
@@ -176,10 +183,7 @@ class GeminiLiveService {
         final message = {
           'realtimeInput': {
             'mediaChunks': [
-              {
-                'mimeType': 'audio/pcm',
-                'data': base64Audio,
-              }
+              {'mimeType': 'audio/pcm', 'data': base64Audio},
             ],
           },
         };
@@ -216,7 +220,8 @@ class GeminiLiveService {
     final rms = sum / samples.length;
 
     // Threshold for detecting speech (adjust as needed)
-    const double speechThreshold = 5000000; // High threshold to prevent echo-triggered interruptions
+    const double speechThreshold =
+        5000000; // High threshold to prevent echo-triggered interruptions
 
     if (rms > speechThreshold) {
       _wasUserSpeaking = true;
@@ -251,11 +256,15 @@ class GeminiLiveService {
         _player.writeChunk(chunk);
         chunkCount++;
         if (chunkCount % 10 == 0) {
-          print('[GeminiLive] Played $chunkCount chunks, queue: ${_audioOutQueue.length}');
+          print(
+            '[GeminiLive] Played $chunkCount chunks, queue: ${_audioOutQueue.length}',
+          );
         }
       } else if (_turnComplete && _isPlaying) {
         // Queue is empty and turn is complete - stop speaking
-        print('[GeminiLive] Audio queue empty and turn complete - stopping speaking state');
+        print(
+          '[GeminiLive] Audio queue empty and turn complete - stopping speaking state',
+        );
         print('[GeminiLive] Total chunks played: $chunkCount');
         _isPlaying = false;
         _turnComplete = false;
@@ -290,7 +299,9 @@ class GeminiLiveService {
       // Handle server content
       if (data.containsKey('serverContent')) {
         final serverContent = data['serverContent'] as Map<String, dynamic>;
-        print('[GeminiLive] serverContent keys: ${serverContent.keys.toList()}');
+        print(
+          '[GeminiLive] serverContent keys: ${serverContent.keys.toList()}',
+        );
 
         // Check for interruption (critical for UX)
         if (serverContent['interrupted'] == true) {
@@ -304,7 +315,9 @@ class GeminiLiveService {
         if (serverContent['turnComplete'] == true) {
           // Mark turn as complete, but don't stop speaking yet
           // Speaking will be stopped when audio queue is empty
-          print('[GeminiLive] Turn complete received, queue size: ${_audioOutQueue.length}, isPlaying: $_isPlaying');
+          print(
+            '[GeminiLive] Turn complete received, queue size: ${_audioOutQueue.length}, isPlaying: $_isPlaying',
+          );
           _turnComplete = true;
           onTurnComplete?.call();
           onStatusChanged?.call('Turn complete - continue speaking');
@@ -328,9 +341,13 @@ class GeminiLiveService {
                     partMap['inlineData'] as Map<String, dynamic>;
                 final mimeType = inlineData['mimeType'] as String?;
                 final dataStr = inlineData['data'] as String?;
-                print('[GeminiLive] inlineData mimeType: $mimeType, hasData: ${dataStr != null}');
+                print(
+                  '[GeminiLive] inlineData mimeType: $mimeType, hasData: ${dataStr != null}',
+                );
 
-                if (mimeType != null && mimeType.contains('audio') && dataStr != null) {
+                if (mimeType != null &&
+                    mimeType.contains('audio') &&
+                    dataStr != null) {
                   // Don't queue audio if paused
                   if (_isPaused) {
                     print('[GeminiLive] Audio chunk dropped (paused)');
@@ -346,7 +363,9 @@ class GeminiLiveService {
                     onSpeakingStateChanged?.call(true);
                   }
 
-                  print('[GeminiLive] Audio chunk received: ${audioBytes.length} bytes, queue size: ${_audioOutQueue.length}');
+                  print(
+                    '[GeminiLive] Audio chunk received: ${audioBytes.length} bytes, queue size: ${_audioOutQueue.length}',
+                  );
                 }
               }
 
@@ -354,6 +373,25 @@ class GeminiLiveService {
               if (partMap.containsKey('text')) {
                 final text = partMap['text'] as String;
                 onTextReceived?.call(text);
+
+                // Detect find mode markers
+                final findMatch = RegExp(r'\[FIND:(.+?)\]').firstMatch(text);
+                if (findMatch != null && !_isFindMode) {
+                  _isFindMode = true;
+                  _findTarget = findMatch.group(1);
+                  print('[GeminiLive] Find mode activated for: $_findTarget');
+                  onFindModeChanged?.call(true, _findTarget);
+                  _startFindModeQueries();
+                }
+
+                // Detect found marker
+                if (text.contains('[FOUND]') && _isFindMode) {
+                  print('[GeminiLive] Target found: $_findTarget');
+                  _stopFindModeQueries();
+                  _isFindMode = false;
+                  onFindModeChanged?.call(false, _findTarget);
+                  _findTarget = null;
+                }
               }
             }
           }
@@ -364,9 +402,44 @@ class GeminiLiveService {
     }
   }
 
+  /// Start periodic queries during find mode to force Gemini to analyze frames
+  void _startFindModeQueries() {
+    _findModeQueryTimer?.cancel();
+    print('[GeminiLive] Starting find mode queries for: $_findTarget');
+    _findModeQueryTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_isFindMode && _isConnected && !_isPaused && _latestFrameBase64 != null) {
+        final message = {
+          'clientContent': {
+            'turns': [
+              {
+                'role': 'user',
+                'parts': [
+                  {'inlineData': {'mimeType': 'image/jpeg', 'data': _latestFrameBase64}},
+                  {'text': 'Is $_findTarget in this image? If NO: output nothing. If YES: announce location and include [FOUND].'},
+                ],
+              },
+            ],
+            'turnComplete': true,
+          },
+        };
+        _channel?.sink.add(jsonEncode(message));
+        print('[GeminiLive] Find mode query sent with latest frame for: $_findTarget');
+      }
+    });
+  }
+
+  /// Stop find mode periodic queries
+  void _stopFindModeQueries() {
+    _findModeQueryTimer?.cancel();
+    _findModeQueryTimer = null;
+    print('[GeminiLive] Find mode queries stopped');
+  }
+
   /// Handle interruption - clear audio queue immediately
   Future<void> _handleInterruption() async {
-    print('[GeminiLive] Handling interruption - clearing queue and restarting player');
+    print(
+      '[GeminiLive] Handling interruption - clearing queue and restarting player',
+    );
 
     if (_isPlaying) {
       _isPlaying = false;
@@ -441,13 +514,14 @@ class GeminiLiveService {
 
       // Send via WebSocket
       final base64Image = base64Encode(jpegBytes);
+
+      // Cache latest frame for find mode queries
+      _latestFrameBase64 = base64Image;
+
       final message = {
         'realtimeInput': {
           'mediaChunks': [
-            {
-              'mimeType': 'image/jpeg',
-              'data': base64Image,
-            }
+            {'mimeType': 'image/jpeg', 'data': base64Image},
           ],
         },
       };
@@ -469,9 +543,9 @@ class GeminiLiveService {
           {
             'role': 'user',
             'parts': [
-              {'text': text}
+              {'text': text},
             ],
-          }
+          },
         ],
         'turnComplete': true,
       },
@@ -576,6 +650,11 @@ class GeminiLiveService {
   Future<void> disconnect() async {
     _shouldQuit = true;
     _isConnected = false;
+
+    _stopFindModeQueries();
+    _isFindMode = false;
+    _findTarget = null;
+    _latestFrameBase64 = null;
 
     await stopAudioStream();
 

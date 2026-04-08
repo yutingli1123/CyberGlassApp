@@ -33,7 +33,9 @@ class BleService {
     // Listen to scan results and filter CyberGlass devices
     await for (final results in FlutterBluePlus.scanResults) {
       final cyberGlassDevices = results.where((result) {
-        return result.device.platformName.startsWith(AppConstants.deviceNamePrefix);
+        return result.device.platformName.startsWith(
+          AppConstants.deviceNamePrefix,
+        );
       }).toList();
 
       yield cyberGlassDevices;
@@ -122,7 +124,6 @@ class BleService {
   Future<Stream<VideoFrame>?> startVideoStream({
     int resolution = BleConstants.defaultResolution,
     int quality = BleConstants.defaultQuality,
-    int fps = BleConstants.defaultFps,
     int? chunkDelay = BleConstants.defaultChunkDelay,
   }) async {
     if (_videoStreamService == null) {
@@ -132,7 +133,6 @@ class BleService {
     await _videoStreamService!.startStream(
       resolution: resolution,
       quality: quality,
-      fps: fps,
       chunkDelay: chunkDelay,
     );
 
@@ -154,5 +154,6 @@ class BleService {
   Stream<double>? get videoFpsStream => _videoStreamService?.fpsStream;
 
   /// Get video state change stream
-  Stream<VideoStreamState>? get videoStateStream => _videoStreamService?.stateStream;
+  Stream<VideoStreamState>? get videoStateStream =>
+      _videoStreamService?.stateStream;
 }

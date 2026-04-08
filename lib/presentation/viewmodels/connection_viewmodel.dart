@@ -28,6 +28,9 @@ class ConnectionViewState with _$ConnectionViewState {
     @Default(false) bool isSpeaking, // Gemini is speaking (audio playback)
     @Default(false) bool isPaused, // Audio stream is paused by user
     @Default(false) bool isProcessing, // Gemini is processing user input
+    // Find mode state
+    @Default(false) bool isFindMode, // Gemini is in find/search mode
+    String? findTarget, // What Gemini is looking for
     // Video stream state
     @Default(false) bool isVideoStreaming,
     @Default(0) int frameCount,
@@ -98,6 +101,14 @@ class ConnectionViewModel extends StateNotifier<ConnectionViewState> {
       if (!state.isPaused && !state.isSpeaking) {
         state = state.copyWith(isProcessing: true);
       }
+    };
+
+    _geminiLiveService.onFindModeChanged = (isActive, target) {
+      print('[GeminiLive] Find mode changed: $isActive, target: $target');
+      state = state.copyWith(
+        isFindMode: isActive,
+        findTarget: target,
+      );
     };
   }
 

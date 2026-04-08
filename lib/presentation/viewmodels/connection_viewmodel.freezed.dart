@@ -34,6 +34,11 @@ mixin _$ConnectionViewState {
       throw _privateConstructorUsedError; // Audio stream is paused by user
   bool get isProcessing =>
       throw _privateConstructorUsedError; // Gemini is processing user input
+  // Find mode state
+  bool get isFindMode =>
+      throw _privateConstructorUsedError; // Gemini is in find/search mode
+  String? get findTarget =>
+      throw _privateConstructorUsedError; // What Gemini is looking for
   // Video stream state
   bool get isVideoStreaming => throw _privateConstructorUsedError;
   int get frameCount => throw _privateConstructorUsedError;
@@ -69,6 +74,8 @@ abstract class $ConnectionViewStateCopyWith<$Res> {
     bool isSpeaking,
     bool isPaused,
     bool isProcessing,
+    bool isFindMode,
+    String? findTarget,
     bool isVideoStreaming,
     int frameCount,
     double currentFps,
@@ -105,6 +112,8 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
     Object? isSpeaking = null,
     Object? isPaused = null,
     Object? isProcessing = null,
+    Object? isFindMode = null,
+    Object? findTarget = freezed,
     Object? isVideoStreaming = null,
     Object? frameCount = null,
     Object? currentFps = null,
@@ -162,6 +171,14 @@ class _$ConnectionViewStateCopyWithImpl<$Res, $Val extends ConnectionViewState>
                 ? _value.isProcessing
                 : isProcessing // ignore: cast_nullable_to_non_nullable
                       as bool,
+            isFindMode: null == isFindMode
+                ? _value.isFindMode
+                : isFindMode // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            findTarget: freezed == findTarget
+                ? _value.findTarget
+                : findTarget // ignore: cast_nullable_to_non_nullable
+                      as String?,
             isVideoStreaming: null == isVideoStreaming
                 ? _value.isVideoStreaming
                 : isVideoStreaming // ignore: cast_nullable_to_non_nullable
@@ -214,6 +231,8 @@ abstract class _$$ConnectionViewStateImplCopyWith<$Res>
     bool isSpeaking,
     bool isPaused,
     bool isProcessing,
+    bool isFindMode,
+    String? findTarget,
     bool isVideoStreaming,
     int frameCount,
     double currentFps,
@@ -249,6 +268,8 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
     Object? isSpeaking = null,
     Object? isPaused = null,
     Object? isProcessing = null,
+    Object? isFindMode = null,
+    Object? findTarget = freezed,
     Object? isVideoStreaming = null,
     Object? frameCount = null,
     Object? currentFps = null,
@@ -306,6 +327,14 @@ class __$$ConnectionViewStateImplCopyWithImpl<$Res>
             ? _value.isProcessing
             : isProcessing // ignore: cast_nullable_to_non_nullable
                   as bool,
+        isFindMode: null == isFindMode
+            ? _value.isFindMode
+            : isFindMode // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        findTarget: freezed == findTarget
+            ? _value.findTarget
+            : findTarget // ignore: cast_nullable_to_non_nullable
+                  as String?,
         isVideoStreaming: null == isVideoStreaming
             ? _value.isVideoStreaming
             : isVideoStreaming // ignore: cast_nullable_to_non_nullable
@@ -351,6 +380,8 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     this.isSpeaking = false,
     this.isPaused = false,
     this.isProcessing = false,
+    this.isFindMode = false,
+    this.findTarget,
     this.isVideoStreaming = false,
     this.frameCount = 0,
     this.currentFps = 0.0,
@@ -406,6 +437,14 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
   @JsonKey()
   final bool isProcessing;
   // Gemini is processing user input
+  // Find mode state
+  @override
+  @JsonKey()
+  final bool isFindMode;
+  // Gemini is in find/search mode
+  @override
+  final String? findTarget;
+  // What Gemini is looking for
   // Video stream state
   @override
   @JsonKey()
@@ -425,7 +464,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
 
   @override
   String toString() {
-    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, isListening: $isListening, isSpeaking: $isSpeaking, isPaused: $isPaused, isProcessing: $isProcessing, isVideoStreaming: $isVideoStreaming, frameCount: $frameCount, currentFps: $currentFps, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
+    return 'ConnectionViewState(scannedDevices: $scannedDevices, isScanning: $isScanning, isConnecting: $isConnecting, isConnected: $isConnected, isRequestingPermission: $isRequestingPermission, isGeminiConnecting: $isGeminiConnecting, isGeminiConnected: $isGeminiConnected, isGeminiStreaming: $isGeminiStreaming, isListening: $isListening, isSpeaking: $isSpeaking, isPaused: $isPaused, isProcessing: $isProcessing, isFindMode: $isFindMode, findTarget: $findTarget, isVideoStreaming: $isVideoStreaming, frameCount: $frameCount, currentFps: $currentFps, geminiStatus: $geminiStatus, error: $error, statusMessage: $statusMessage)';
   }
 
   @override
@@ -459,6 +498,10 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
                 other.isPaused == isPaused) &&
             (identical(other.isProcessing, isProcessing) ||
                 other.isProcessing == isProcessing) &&
+            (identical(other.isFindMode, isFindMode) ||
+                other.isFindMode == isFindMode) &&
+            (identical(other.findTarget, findTarget) ||
+                other.findTarget == findTarget) &&
             (identical(other.isVideoStreaming, isVideoStreaming) ||
                 other.isVideoStreaming == isVideoStreaming) &&
             (identical(other.frameCount, frameCount) ||
@@ -473,7 +516,7 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     const DeepCollectionEquality().hash(_scannedDevices),
     isScanning,
@@ -487,13 +530,15 @@ class _$ConnectionViewStateImpl implements _ConnectionViewState {
     isSpeaking,
     isPaused,
     isProcessing,
+    isFindMode,
+    findTarget,
     isVideoStreaming,
     frameCount,
     currentFps,
     geminiStatus,
     error,
     statusMessage,
-  );
+  ]);
 
   /// Create a copy of ConnectionViewState
   /// with the given fields replaced by the non-null parameter values.
@@ -521,6 +566,8 @@ abstract class _ConnectionViewState implements ConnectionViewState {
     final bool isSpeaking,
     final bool isPaused,
     final bool isProcessing,
+    final bool isFindMode,
+    final String? findTarget,
     final bool isVideoStreaming,
     final int frameCount,
     final double currentFps,
@@ -553,6 +600,11 @@ abstract class _ConnectionViewState implements ConnectionViewState {
   bool get isPaused; // Audio stream is paused by user
   @override
   bool get isProcessing; // Gemini is processing user input
+  // Find mode state
+  @override
+  bool get isFindMode; // Gemini is in find/search mode
+  @override
+  String? get findTarget; // What Gemini is looking for
   // Video stream state
   @override
   bool get isVideoStreaming;
